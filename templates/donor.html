@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dravya — Donors & Families</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+    body { font-family: 'Crimson Text', serif; background-color: #fffbf2; }
+    .cinzel { font-family: 'Cinzel', serif; }
+    .top-strip {
+      background: repeating-linear-gradient(90deg,#c2710c 0px,#c2710c 8px,#e89a3c 8px,#e89a3c 16px,#fffbf2 16px,#fffbf2 24px);
+      height: 5px;
+    }
+    .navbar { background: linear-gradient(135deg, #7a2e00, #c2710c); }
+    .nav-link { color: #fde9c9; font-size: 0.85rem; letter-spacing: 0.08em; transition: color 0.2s; }
+    .nav-link:hover { color: #fff; }
+    .nav-link.active { color: #fff; border-bottom: 2px solid #fde9c9; }
+    .tab-btn {
+      font-family: 'Cinzel', serif;
+      font-size: 0.8rem; letter-spacing: 0.1em;
+      padding: 10px 28px;
+      border-bottom: 3px solid transparent;
+      color: #a07040; transition: all 0.2s; cursor: pointer;
+    }
+    .tab-btn.active { color: #c2710c; border-bottom-color: #c2710c; }
+    .tab-btn:hover { color: #c2710c; }
+    .card {
+      background: white; border: 1px solid #f0d9b5;
+      border-radius: 4px; box-shadow: 0 2px 8px rgba(194,113,12,0.07);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #e07b12, #c2710c);
+      color: white; border-radius: 4px;
+      font-size: 0.78rem; letter-spacing: 0.08em;
+      transition: all 0.2s; padding: 8px 18px;
+    }
+    .btn-primary:hover { background: linear-gradient(135deg,#c2710c,#a05e08); transform: translateY(-1px); }
+    .btn-outline {
+      border: 1px solid #c2710c; color: #c2710c;
+      border-radius: 4px; font-size: 0.78rem;
+      letter-spacing: 0.08em; transition: all 0.2s; padding: 6px 14px;
+    }
+    .btn-outline:hover { background: #fff8f0; }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      background: #fef3e2; color: #7a2e00;
+      font-family: 'Cinzel', serif; font-size: 0.72rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 10px 14px; text-align: left;
+      border-bottom: 2px solid #f0d9b5;
+    }
+    td { padding: 11px 14px; border-bottom: 1px solid #fef3e2; font-size: 0.92rem; color: #4a3000; }
+    tr:hover td { background: #fffbf5; }
+    .badge { font-size: 0.7rem; padding: 2px 10px; border-radius: 9999px; font-weight: 600; }
+    .badge-family { background: #fef3c7; color: #92400e; }
+    .badge-none { background: #f3f4f6; color: #6b7280; }
+    .family-card {
+      background: white; border: 1px solid #f0d9b5;
+      border-left: 4px solid #c2710c;
+      border-radius: 4px; padding: 16px 20px;
+      box-shadow: 0 2px 6px rgba(194,113,12,0.07);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .family-card:hover { box-shadow: 0 4px 14px rgba(194,113,12,0.13); transform: translateY(-1px); }
+    .divider {
+      display: flex; align-items: center; gap: 8px;
+      color: #c2710c; font-size: 0.75rem; letter-spacing: 0.12em;
+    }
+    .divider::before, .divider::after { content:''; flex:1; height:1px; background:#e89a3c; }
+    input[type="text"], input[type="email"], input[type="tel"], select, textarea {
+      border: 1px solid #f0d9b5; border-radius: 4px;
+      padding: 8px 12px; font-size: 0.9rem;
+      background: #fffbf5; color: #4a3000;
+      font-family: 'Crimson Text', serif;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none; border-color: #c2710c;
+      box-shadow: 0 0 0 2px rgba(194,113,12,0.12);
+    }
+    /* modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 50;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #fffbf2; border: 2px solid #c2710c;
+      border-radius: 6px; width: 100%; max-width: 520px;
+      max-height: 90vh; overflow-y: auto;
+      padding: 32px; position: relative;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <div class="top-strip"></div>
+
+  <!-- navbar -->
+  <nav class="navbar px-6 py-3 flex items-center justify-between shadow-md">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl">🕉</span>
+      <div>
+        <h1 class="cinzel text-white font-bold text-lg tracking-widest leading-tight">DRAVYA</h1>
+        <p class="text-xs tracking-widest" style="color:#fde9c9;font-size:0.65rem;">JAIN TEMPLE MANAGEMENT</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-6">
+      <a href="/dashboard" class="nav-link cinzel">Dashboard</a>
+      <a href="/donors" class="nav-link cinzel active">Donors & Families</a>
+      <a href="/reports" class="nav-link cinzel">Reports</a>
+    </div>
+    <div class="flex items-center gap-3">
+      <button onclick="openCreateEvent()"
+        class="btn-primary cinzel text-xs font-semibold tracking-widest">+ CREATE EVENT</button>
+      <div class="w-px h-6 bg-amber-400 opacity-40"></div>
+      <button class="nav-link cinzel text-xs" onclick="logout()">LOGOUT</button>
+    </div>
+  </nav>
+
+  <!-- main -->
+  <main class="max-w-7xl mx-auto px-6 py-8">
+
+    <div class="mb-6">
+      <div class="divider mb-3">MANAGEMENT</div>
+      <h2 class="cinzel text-2xl font-bold" style="color:#7a2e00;">Donors & Families</h2>
+      <p class="text-sm mt-1" style="color:#a07040;">Manage donor records and family groups.</p>
+    </div>
+
+    <!-- tabs -->
+    <div class="border-b border-amber-200 mb-6 flex">
+      <div class="tab-btn active" id="tab-donors" onclick="switchTab('donors')">DONORS</div>
+      <div class="tab-btn" id="tab-families" onclick="switchTab('families')">FAMILIES</div>
+    </div>
+
+    <!-- ── DONORS TAB ── -->
+    <div id="panel-donors">
+      <div class="flex items-center justify-between mb-4">
+        <input type="text" placeholder="Search by name, mobile, or email..."
+          oninput="searchDonors(this.value)"
+          class="w-72" style="border:1px solid #f0d9b5;"/>
+        <button class="btn-primary cinzel font-semibold tracking-widest"
+          onclick="openDonorModal()">+ ADD DONOR</button>
+      </div>
+
+      <div class="card overflow-hidden">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Mobile</th>
+              <th>Email</th>
+              <th>Family</th>
+              <th>Anonymous</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="donorsTableBody">
+            <!-- populated by JS -->
+          </tbody>
+        </table>
+        <div id="donorsEmpty" class="hidden text-center py-10">
+          <p class="text-3xl mb-2">🪔</p>
+          <p class="cinzel text-sm font-semibold" style="color:#c2710c;">No donors found</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FAMILIES TAB ── -->
+    <div id="panel-families" class="hidden">
+      <div class="flex items-center justify-between mb-4">
+        <input type="text" placeholder="Search families..."
+          oninput="searchFamilies(this.value)" class="w-72"/>
+        <button class="btn-primary cinzel font-semibold tracking-widest"
+          onclick="openFamilyModal()">+ ADD FAMILY</button>
+      </div>
+
+      <div id="familiesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- populated by JS -->
+      </div>
+      <div id="familiesEmpty" class="hidden text-center py-10">
+        <p class="text-3xl mb-2">🪔</p>
+        <p class="cinzel text-sm font-semibold" style="color:#c2710c;">No families found</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── ADD DONOR MODAL ── -->
+  <div class="modal-overlay" id="donorModal">
+    <div class="modal">
+      <button onclick="closeDonorModal()"
+        class="absolute top-4 right-5 text-xl font-bold" style="color:#c2710c;">✕</button>
+      <h3 class="cinzel text-xl font-bold mb-1" style="color:#7a2e00;">Add Donor</h3>
+      <div class="divider mb-5">DONOR DETAILS</div>
+
+      <form onsubmit="submitDonor(event)" class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">First Name</label>
+            <input type="text" id="d-first" placeholder="First name"/>
+          </div>
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Last Name</label>
+            <input type="text" id="d-last" placeholder="Last name"/>
+          </div>
+        </div>
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Mobile Number</label>
+          <input type="tel" id="d-mobile" placeholder="10-digit mobile number"/>
+        </div>
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Email</label>
+          <input type="email" id="d-email" placeholder="Email address"/>
+        </div>
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Address</label>
+          <textarea id="d-address" rows="2" placeholder="Full address"></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Family</label>
+            <select id="d-family">
+              <option value="">— No Family —</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Relation in Family</label>
+            <input type="text" id="d-relation" placeholder="e.g. Head, Son"/>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="checkbox" id="d-anon" class="w-4 h-4 accent-amber-600"/>
+          <label for="d-anon" class="text-sm" style="color:#7a4a00;">Anonymous Donor</label>
+        </div>
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Description</label>
+          <textarea id="d-desc" rows="2" placeholder="Optional notes"></textarea>
+        </div>
+        <div id="donorError" class="hidden text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2"></div>
+        <div class="flex gap-3 pt-2">
+          <button type="submit" class="btn-primary cinzel font-semibold tracking-widest flex-1">SAVE DONOR</button>
+          <button type="button" onclick="closeDonorModal()" class="btn-outline cinzel font-semibold flex-1">CANCEL</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── ADD FAMILY MODAL ── -->
+  <div class="modal-overlay" id="familyModal">
+    <div class="modal">
+      <button onclick="closeFamilyModal()"
+        class="absolute top-4 right-5 text-xl font-bold" style="color:#c2710c;">✕</button>
+      <h3 class="cinzel text-xl font-bold mb-1" style="color:#7a2e00;">Add Family</h3>
+      <div class="divider mb-5">FAMILY DETAILS</div>
+
+      <form onsubmit="submitFamily(event)" class="space-y-4">
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Family Name</label>
+          <input type="text" id="f-name" placeholder="e.g. Shah Family"/>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Members Count</label>
+            <input type="text" id="f-count" placeholder="Number of members"/>
+          </div>
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Phone</label>
+            <input type="tel" id="f-phone" placeholder="Contact number"/>
+          </div>
+        </div>
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Address</label>
+          <textarea id="f-address" rows="2" placeholder="Family address"></textarea>
+        </div>
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Description</label>
+          <textarea id="f-desc" rows="2" placeholder="Optional notes"></textarea>
+        </div>
+        <div id="familyError" class="hidden text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2"></div>
+        <div class="flex gap-3 pt-2">
+          <button type="submit" class="btn-primary cinzel font-semibold tracking-widest flex-1">SAVE FAMILY</button>
+          <button type="button" onclick="closeFamilyModal()" class="btn-outline cinzel font-semibold flex-1">CANCEL</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="top-strip mt-8"></div>
+
+  <script>
+    // ── mock data ──
+    let donors = [
+      { donor_id:1, first_name:"Mahesh", last_name:"Shah", mobile:"9988776655", email:"mahesh@example.com", family_id:1, family_name:"Shah Family", relation_in_family:"Head", is_anonymous:false },
+      { donor_id:2, first_name:"Neelesh", last_name:"Jain", mobile:"9876543210", email:"neelesh@example.com", family_id:null, family_name:null, relation_in_family:null, is_anonymous:false },
+      { donor_id:3, first_name:"Priya", last_name:"Kothari", mobile:"9765432109", email:"priya@example.com", family_id:2, family_name:"Kothari Family", relation_in_family:"Wife", is_anonymous:true }
+    ];
+
+    let families = [
+      { family_id:1, family_name:"Shah Family", family_members_count:4, phone:"9988776655", address:"Bhopal, MP" },
+      { family_id:2, family_name:"Kothari Family", family_members_count:3, phone:"9765432109", address:"Indore, MP" }
+    ];
+
+    let donorSearch = '';
+    let familySearch = '';
+
+    // ── tabs ──
+    function switchTab(tab) {
+      ['donors','families'].forEach(t => {
+        document.getElementById('tab-' + t).classList.remove('active');
+        document.getElementById('panel-' + t).classList.add('hidden');
+      });
+      document.getElementById('tab-' + tab).classList.add('active');
+      document.getElementById('panel-' + tab).classList.remove('hidden');
+    }
+
+    // ── donors ──
+    function renderDonors() {
+      const tbody = document.getElementById('donorsTableBody');
+      const empty = document.getElementById('donorsEmpty');
+      let filtered = donors.filter(d => {
+        const q = donorSearch.toLowerCase();
+        return !q ||
+          (d.first_name + ' ' + d.last_name).toLowerCase().includes(q) ||
+          (d.mobile || '').includes(q) ||
+          (d.email || '').toLowerCase().includes(q);
+      });
+
+      if (!filtered.length) {
+        tbody.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+      tbody.innerHTML = filtered.map((d, i) => `
+        <tr>
+          <td class="text-xs" style="color:#a07040;">${i+1}</td>
+          <td>
+            <div class="font-semibold" style="color:#7a2e00;">${d.first_name} ${d.last_name}</div>
+          </td>
+          <td>${d.mobile || '—'}</td>
+          <td class="text-sm">${d.email || '—'}</td>
+          <td>
+            ${d.family_name
+              ? `<span class="badge badge-family">${d.family_name}</span>`
+              : `<span class="badge badge-none">No Family</span>`}
+          </td>
+          <td>
+            ${d.is_anonymous
+              ? '<span class="badge" style="background:#fce7f3;color:#9d174d;">Yes</span>'
+              : '<span class="badge badge-none">No</span>'}
+          </td>
+          <td>
+            <div class="flex gap-2">
+              <button onclick="editDonor(${d.donor_id})"
+                class="btn-outline text-xs py-1 px-3">Edit</button>
+              <button onclick="deleteDonor(${d.donor_id})"
+                class="text-xs py-1 px-3 rounded border border-red-200 text-red-500 hover:bg-red-50">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function searchDonors(q) { donorSearch = q; renderDonors(); }
+
+    // ── families ──
+    function renderFamilies() {
+      const grid = document.getElementById('familiesGrid');
+      const empty = document.getElementById('familiesEmpty');
+      let filtered = families.filter(f =>
+        !familySearch || f.family_name.toLowerCase().includes(familySearch.toLowerCase())
+      );
+
+      if (!filtered.length) {
+        grid.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+      grid.innerHTML = filtered.map(f => {
+        const familyDonors = donors.filter(d => d.family_id === f.family_id);
+        return `
+          <div class="family-card" onclick="toggleFamilyDonors(${f.family_id})">
+            <div class="flex items-start justify-between">
+              <div>
+                <h3 class="cinzel font-bold" style="color:#7a2e00;">${f.family_name}</h3>
+                <p class="text-xs mt-0.5" style="color:#a07040;">👥 ${f.family_members_count || 0} members</p>
+              </div>
+              <span class="text-lg">🏠</span>
+            </div>
+            <p class="text-sm mt-2" style="color:#a07040;">📞 ${f.phone || '—'}</p>
+            <p class="text-sm" style="color:#a07040;">📍 ${f.address || '—'}</p>
+
+            <div id="family-donors-${f.family_id}" class="hidden mt-3 pt-3 border-t border-amber-100">
+              ${familyDonors.length
+                ? familyDonors.map(d => `
+                    <div class="flex items-center justify-between py-1">
+                      <span class="text-sm" style="color:#4a3000;">${d.first_name} ${d.last_name}</span>
+                      <span class="text-xs" style="color:#a07040;">${d.relation_in_family || '—'}</span>
+                    </div>`).join('')
+                : '<p class="text-xs" style="color:#a07040;">No donors linked</p>'
+              }
+            </div>
+            <p class="text-xs mt-2 font-semibold" style="color:#c2710c;">
+              ${familyDonors.length} donor${familyDonors.length !== 1 ? 's' : ''} · Click to expand ↓
+            </p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleFamilyDonors(id) {
+      const el = document.getElementById('family-donors-' + id);
+      el.classList.toggle('hidden');
+    }
+
+    function searchFamilies(q) { familySearch = q; renderFamilies(); }
+
+    // ── donor modal ──
+    function openDonorModal() {
+      populateFamilyDropdown();
+      document.getElementById('donorModal').classList.add('open');
+    }
+    function closeDonorModal() {
+      document.getElementById('donorModal').classList.remove('open');
+    }
+    function populateFamilyDropdown() {
+      const sel = document.getElementById('d-family');
+      sel.innerHTML = '<option value="">— No Family —</option>' +
+        families.map(f => `<option value="${f.family_id}">${f.family_name}</option>`).join('');
+    }
+    async function submitDonor(e) {
+      e.preventDefault();
+      const payload = {
+        first_name: document.getElementById('d-first').value,
+        last_name:  document.getElementById('d-last').value,
+        mobile:     document.getElementById('d-mobile').value,
+        email:      document.getElementById('d-email').value,
+        address:    document.getElementById('d-address').value,
+        family_id:  document.getElementById('d-family').value || null,
+        relation_in_family: document.getElementById('d-relation').value || null,
+        is_anonymous: document.getElementById('d-anon').checked,
+        description: document.getElementById('d-desc').value
+      };
+      // mock add — replace with fetch('/donors/', { method:'POST', ... })
+      donors.push({ ...payload, donor_id: donors.length + 1,
+        family_name: families.find(f => f.family_id == payload.family_id)?.family_name || null });
+      closeDonorModal();
+      renderDonors();
+    }
+
+    // ── family modal ──
+    function openFamilyModal() {
+      document.getElementById('familyModal').classList.add('open');
+    }
+    function closeFamilyModal() {
+      document.getElementById('familyModal').classList.remove('open');
+    }
+    async function submitFamily(e) {
+      e.preventDefault();
+      const payload = {
+        family_name: document.getElementById('f-name').value,
+        family_members_count: parseInt(document.getElementById('f-count').value) || 0,
+        phone: document.getElementById('f-phone').value,
+        address: document.getElementById('f-address').value,
+        description: document.getElementById('f-desc').value
+      };
+      // mock add — replace with fetch('/families/', { method:'POST', ... })
+      families.push({ ...payload, family_id: families.length + 1 });
+      closeFamilyModal();
+      renderFamilies();
+    }
+
+    function editDonor(id) { alert('Edit donor ' + id + ' — wire to PUT /donors/' + id); }
+    function deleteDonor(id) {
+      if (confirm('Delete this donor?')) {
+        donors = donors.filter(d => d.donor_id !== id);
+        renderDonors();
+      }
+    }
+
+    function openCreateEvent() { window.location.href = '/events/create'; }
+    function logout() { window.location.href = '/login'; }
+
+    // init
+    renderDonors();
+    renderFamilies();
+  </script>
+
+</body>
+</html>

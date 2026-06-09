@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dravya — Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+
+    body {
+      font-family: 'Crimson Text', serif;
+      background-color: #fffbf2;
+    }
+
+    .cinzel { font-family: 'Cinzel', serif; }
+
+    /* border pattern */
+    .pattern-border {
+      border: 3px solid #c2710c;
+      position: relative;
+    }
+    .pattern-border::before {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border: 1px solid #e89a3c;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* corner ornaments */
+    .corner::before, .corner::after,
+    .corner > span::before, .corner > span::after {
+      content: '✦';
+      position: absolute;
+      color: #c2710c;
+      font-size: 14px;
+    }
+    .corner::before  { top: -10px;  left: -10px; }
+    .corner::after   { top: -10px;  right: -10px; }
+    .corner > span::before { bottom: -10px; left: -10px; }
+    .corner > span::after  { bottom: -10px; right: -10px; }
+
+    input:focus {
+      outline: none;
+      border-color: #c2710c;
+      box-shadow: 0 0 0 2px rgba(194,113,12,0.15);
+    }
+
+    .btn-saffron {
+      background: linear-gradient(135deg, #e07b12, #c2710c);
+      transition: all 0.2s ease;
+    }
+    .btn-saffron:hover {
+      background: linear-gradient(135deg, #c2710c, #a05e08);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(194,113,12,0.35);
+    }
+
+    /* top decorative strip */
+    .top-strip {
+      background: repeating-linear-gradient(
+        90deg,
+        #c2710c 0px, #c2710c 8px,
+        #e89a3c 8px, #e89a3c 16px,
+        #fffbf2 16px, #fffbf2 24px
+      );
+      height: 6px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center px-4"
+      style="background-image: radial-gradient(circle at 20% 20%, #fde9c9 0%, #fffbf2 60%);">
+
+  <!-- top decorative strip -->
+  <div class="top-strip fixed top-0 left-0 right-0 z-10"></div>
+
+  <!-- om / aum symbol -->
+  <div class="mb-4 text-center">
+    <span class="text-5xl" style="color:#c2710c;">🕉</span>
+  </div>
+
+  <!-- card -->
+  <div class="pattern-border corner relative w-full max-w-md bg-white rounded-sm shadow-xl px-10 py-10 z-0">
+    <span></span><!-- needed for corner pseudo -->
+
+    <!-- header -->
+    <div class="text-center mb-8">
+      <h1 class="cinzel text-3xl font-bold tracking-widest" style="color:#c2710c;">DRAVYA</h1>
+      <div class="flex items-center justify-center gap-2 mt-1">
+        <div class="h-px w-12" style="background:#e89a3c;"></div>
+        <span class="text-xs tracking-widest uppercase" style="color:#a05e08;">Jain Temple Management</span>
+        <div class="h-px w-12" style="background:#e89a3c;"></div>
+      </div>
+    </div>
+
+    <!-- form -->
+    <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-5">
+
+      <!-- email or mobile -->
+      <div>
+        <label class="block text-sm font-semibold mb-1 tracking-wide" style="color:#7a4a00;">
+          Email or Mobile Number
+        </label>
+        <input
+          type="text"
+          id="identifier"
+          placeholder="Enter email or mobile number"
+          required
+          class="w-full border border-amber-300 rounded px-4 py-2.5 text-sm bg-amber-50 text-gray-800 transition"
+        />
+      </div>
+
+      <!-- password -->
+      <div>
+        <label class="block text-sm font-semibold mb-1 tracking-wide" style="color:#7a4a00;">
+          Password
+        </label>
+        <div class="relative">
+          <input
+            type="password"
+            id="password"
+            placeholder="Enter your password"
+            required
+            class="w-full border border-amber-300 rounded px-4 py-2.5 text-sm bg-amber-50 text-gray-800 pr-10 transition"
+          />
+          <button type="button" onclick="togglePassword()"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-amber-600 text-xs font-semibold">
+            SHOW
+          </button>
+        </div>
+      </div>
+
+      <!-- forgot password -->
+      <div class="text-right">
+        <a href="/forgot-password"
+           class="text-sm font-semibold hover:underline"
+           style="color:#c2710c;">
+          Forgot Password?
+        </a>
+      </div>
+
+      <!-- error message -->
+      <div id="errorMsg" class="hidden text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 text-center"></div>
+
+      <!-- submit -->
+      <button type="submit"
+        class="btn-saffron w-full text-white cinzel font-semibold tracking-widest py-3 rounded text-sm shadow">
+        LOGIN
+      </button>
+
+    </form>
+
+    <!-- bottom divider -->
+    <div class="flex items-center justify-center gap-3 mt-8">
+      <div class="h-px flex-1" style="background:#e89a3c;"></div>
+      <span style="color:#c2710c;">✦</span>
+      <div class="h-px flex-1" style="background:#e89a3c;"></div>
+    </div>
+
+    <p class="text-center text-xs mt-3 tracking-wide" style="color:#a07040;">
+      Jai Jinendra &nbsp;·&nbsp; Dravya v1.0
+    </p>
+
+  </div>
+
+  <div class="bottom-strip fixed bottom-0 left-0 right-0" style="height:6px;
+    background: repeating-linear-gradient(90deg,#c2710c 0px,#c2710c 8px,#e89a3c 8px,#e89a3c 16px,#fffbf2 16px,#fffbf2 24px);">
+  </div>
+
+  <script>
+    function togglePassword() {
+      const input = document.getElementById('password');
+      const btn = input.nextElementSibling;
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = 'HIDE';
+      } else {
+        input.type = 'password';
+        btn.textContent = 'SHOW';
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const identifier = document.getElementById('identifier').value.trim();
+      const password = document.getElementById('password').value;
+      const errorMsg = document.getElementById('errorMsg');
+
+      // placeholder — wire to POST /auth/login when auth is ready
+      try {
+        const res = await fetch('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier, password })
+        });
+        if (res.ok) {
+          window.location.href = '/dashboard';
+        } else {
+          const data = await res.json();
+          errorMsg.textContent = data.detail || 'Invalid credentials';
+          errorMsg.classList.remove('hidden');
+        }
+      } catch (err) {
+        errorMsg.textContent = 'Unable to connect to server';
+        errorMsg.classList.remove('hidden');
+      }
+    }
+  </script>
+
+</body>
+</html>

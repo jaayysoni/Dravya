@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dravya — Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+    body { font-family: 'Crimson Text', serif; background-color: #fffbf2; }
+    .cinzel { font-family: 'Cinzel', serif; }
+    .top-strip {
+      background: repeating-linear-gradient(90deg,#c2710c 0px,#c2710c 8px,#e89a3c 8px,#e89a3c 16px,#fffbf2 16px,#fffbf2 24px);
+      height: 5px;
+    }
+    .navbar { background: linear-gradient(135deg, #7a2e00, #c2710c); }
+    .nav-link { color: #fde9c9; font-size: 0.85rem; letter-spacing: 0.08em; transition: color 0.2s; }
+    .nav-link:hover { color: #fff; }
+    .nav-link.active { color: #fff; border-bottom: 2px solid #fde9c9; }
+    .stat-card {
+      background: white;
+      border: 1px solid #f0d9b5;
+      border-top: 4px solid #c2710c;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(194,113,12,0.08);
+    }
+    .event-card {
+      background: white;
+      border: 1px solid #f0d9b5;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(194,113,12,0.08);
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+    .event-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(194,113,12,0.15);
+    }
+    .progress-bar-bg { background: #fde9c9; border-radius: 9999px; height: 8px; }
+    .progress-bar-fill { background: linear-gradient(90deg, #e07b12, #c2710c); border-radius: 9999px; height: 8px; transition: width 0.6s ease; }
+    .btn-primary {
+      background: linear-gradient(135deg, #e07b12, #c2710c);
+      color: white; border-radius: 4px;
+      font-size: 0.78rem; letter-spacing: 0.08em;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover { background: linear-gradient(135deg, #c2710c, #a05e08); transform: translateY(-1px); }
+    .badge {
+      font-size: 0.7rem; padding: 2px 10px;
+      border-radius: 9999px; font-weight: 600; letter-spacing: 0.05em;
+    }
+    .badge-active { background: #fef3c7; color: #92400e; }
+    .badge-upcoming { background: #dbeafe; color: #1e40af; }
+    .badge-completed { background: #d1fae5; color: #065f46; }
+    .divider {
+      display: flex; align-items: center; gap: 8px;
+      color: #c2710c; font-size: 0.75rem; letter-spacing: 0.12em;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: #e89a3c;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- top strip -->
+  <div class="top-strip"></div>
+
+  <!-- navbar -->
+  <nav class="navbar px-6 py-3 flex items-center justify-between shadow-md">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl">🕉</span>
+      <div>
+        <h1 class="cinzel text-white font-bold text-lg tracking-widest leading-tight">DRAVYA</h1>
+        <p class="text-xs tracking-widest" style="color:#fde9c9; font-size:0.65rem;">JAIN TEMPLE MANAGEMENT</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-6">
+      <a href="/dashboard" class="nav-link cinzel active">Dashboard</a>
+      <a href="/donors" class="nav-link cinzel">Donors & Families</a>
+      <a href="/reports" class="nav-link cinzel">Reports</a>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button onclick="openCreateEvent()"
+        class="btn-primary cinzel px-4 py-2 text-xs font-semibold tracking-widest">
+        + CREATE EVENT
+      </button>
+      <!-- admin only -->
+      <button onclick="openCreateUser()"
+        class="cinzel px-4 py-2 text-xs font-semibold tracking-widest border border-amber-300 rounded"
+        style="color:#fde9c9;">
+        + USER
+      </button>
+      <div class="w-px h-6 bg-amber-400 opacity-40"></div>
+      <button class="nav-link cinzel text-xs" onclick="logout()">LOGOUT</button>
+    </div>
+  </nav>
+
+  <!-- page content -->
+  <main class="max-w-7xl mx-auto px-6 py-8">
+
+    <!-- page title -->
+    <div class="mb-6">
+      <div class="divider mb-3">OVERVIEW</div>
+      <h2 class="cinzel text-2xl font-bold" style="color:#7a2e00;">Dashboard</h2>
+      <p class="text-sm mt-1" style="color:#a07040;">Welcome back. Here's what's happening today.</p>
+    </div>
+
+    <!-- quick summary cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+
+      <div class="stat-card p-5">
+        <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Active Events</p>
+        <p class="cinzel text-3xl font-bold" style="color:#c2710c;" id="activeEvents">—</p>
+        <p class="text-xs mt-1" style="color:#b08050;">Currently running</p>
+      </div>
+
+      <div class="stat-card p-5">
+        <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Total Received</p>
+        <p class="cinzel text-3xl font-bold" style="color:#c2710c;" id="totalReceived">—</p>
+        <p class="text-xs mt-1" style="color:#b08050;">Across all events</p>
+      </div>
+
+      <div class="stat-card p-5">
+        <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Pending Donations</p>
+        <p class="cinzel text-3xl font-bold" style="color:#c2710c;" id="totalPending">—</p>
+        <p class="text-xs mt-1" style="color:#b08050;">Awaiting collection</p>
+      </div>
+
+      <div class="stat-card p-5">
+        <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Total Donors</p>
+        <p class="cinzel text-3xl font-bold" style="color:#c2710c;" id="totalDonors">—</p>
+        <p class="text-xs mt-1" style="color:#b08050;">Registered donors</p>
+      </div>
+
+    </div>
+
+    <!-- events section -->
+    <div class="divider mb-4">EVENTS</div>
+
+    <!-- filters row -->
+    <div class="flex items-center justify-between mb-5">
+      <div class="flex gap-2">
+        <button onclick="filterEvents('all')"
+          class="filter-btn cinzel text-xs px-4 py-1.5 rounded border border-amber-300 font-semibold active-filter"
+          style="background:#c2710c; color:white;" id="filter-all">ALL</button>
+        <button onclick="filterEvents('active')"
+          class="filter-btn cinzel text-xs px-4 py-1.5 rounded border border-amber-300 font-semibold"
+          style="color:#c2710c;" id="filter-active">ACTIVE</button>
+        <button onclick="filterEvents('upcoming')"
+          class="filter-btn cinzel text-xs px-4 py-1.5 rounded border border-amber-300 font-semibold"
+          style="color:#c2710c;" id="filter-upcoming">UPCOMING</button>
+        <button onclick="filterEvents('completed')"
+          class="filter-btn cinzel text-xs px-4 py-1.5 rounded border border-amber-300 font-semibold"
+          style="color:#c2710c;" id="filter-completed">COMPLETED</button>
+      </div>
+      <input type="text" placeholder="Search events..."
+        oninput="searchEvents(this.value)"
+        class="border border-amber-200 rounded px-3 py-1.5 text-sm bg-amber-50 focus:outline-none focus:border-amber-500 w-52"/>
+    </div>
+
+    <!-- event cards grid -->
+    <div id="eventsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <!-- populated by JS -->
+    </div>
+
+    <!-- empty state -->
+    <div id="emptyState" class="hidden text-center py-16">
+      <p class="text-4xl mb-3">🪔</p>
+      <p class="cinzel text-lg font-semibold" style="color:#c2710c;">No Events Found</p>
+      <p class="text-sm mt-1" style="color:#a07040;">Create your first event to get started.</p>
+    </div>
+
+  </main>
+
+  <!-- bottom strip -->
+  <div class="top-strip mt-8"></div>
+
+  <script>
+    // ── mock data (replace with fetch('/events/') when backend ready) ──
+    const mockEvents = [
+      {
+        event_id: 1,
+        event_name: "Paryushan 2026",
+        category: "Religious",
+        start_date: "2026-08-15",
+        end_date: "2026-08-23",
+        total_promised: 250000,
+        total_received: 175000,
+        total_donors: 48,
+        status: "upcoming"
+      },
+      {
+        event_id: 2,
+        event_name: "Mahavir Jayanti",
+        category: "Festival",
+        start_date: "2026-04-10",
+        end_date: "2026-04-10",
+        total_promised: 80000,
+        total_received: 80000,
+        total_donors: 22,
+        status: "completed"
+      },
+      {
+        event_id: 3,
+        event_name: "Temple Renovation Fund",
+        category: "Infrastructure",
+        start_date: "2026-01-01",
+        end_date: "2026-12-31",
+        total_promised: 500000,
+        total_received: 210000,
+        total_donors: 91,
+        status: "active"
+      }
+    ];
+
+    let currentFilter = 'all';
+    let searchQuery = '';
+
+    function formatAmount(n) {
+      if (n >= 100000) return '₹' + (n/100000).toFixed(1) + 'L';
+      if (n >= 1000) return '₹' + (n/1000).toFixed(1) + 'K';
+      return '₹' + n;
+    }
+
+    function formatDate(d) {
+      return new Date(d).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+    }
+
+    function getStatusBadge(status) {
+      const map = {
+        active:    '<span class="badge badge-active">Active</span>',
+        upcoming:  '<span class="badge badge-upcoming">Upcoming</span>',
+        completed: '<span class="badge badge-completed">Completed</span>'
+      };
+      return map[status] || '';
+    }
+
+    function getEventStatus(event) {
+      const now = new Date();
+      const start = new Date(event.start_date);
+      const end = new Date(event.end_date);
+      if (now < start) return 'upcoming';
+      if (now > end) return 'completed';
+      return 'active';
+    }
+
+    function renderEvents() {
+      const grid = document.getElementById('eventsGrid');
+      const empty = document.getElementById('emptyState');
+
+      let filtered = mockEvents.map(e => ({ ...e, status: getEventStatus(e) }));
+
+      if (currentFilter !== 'all') {
+        filtered = filtered.filter(e => e.status === currentFilter);
+      }
+
+      if (searchQuery) {
+        filtered = filtered.filter(e =>
+          e.event_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          e.category.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      }
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+
+      empty.classList.add('hidden');
+
+      grid.innerHTML = filtered.map(event => {
+        const pct = Math.min(100, Math.round((event.total_received / event.total_promised) * 100));
+        const pending = event.total_promised - event.total_received;
+        return `
+          <div class="event-card p-5" onclick="goToEvent(${event.event_id})">
+            <div class="flex items-start justify-between mb-3">
+              <div>
+                <h3 class="cinzel font-bold text-base leading-tight" style="color:#7a2e00;">${event.event_name}</h3>
+                <p class="text-xs mt-0.5" style="color:#a07040;">${event.category}</p>
+              </div>
+              ${getStatusBadge(event.status)}
+            </div>
+
+            <div class="flex items-center gap-1 text-xs mb-4" style="color:#a07040;">
+              <span>📅</span>
+              <span>${formatDate(event.start_date)} — ${formatDate(event.end_date)}</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 mb-4 text-center">
+              <div>
+                <p class="text-xs" style="color:#a07040;">Promised</p>
+                <p class="cinzel font-bold text-sm" style="color:#7a2e00;">${formatAmount(event.total_promised)}</p>
+              </div>
+              <div>
+                <p class="text-xs" style="color:#a07040;">Received</p>
+                <p class="cinzel font-bold text-sm" style="color:#16a34a;">${formatAmount(event.total_received)}</p>
+              </div>
+              <div>
+                <p class="text-xs" style="color:#a07040;">Pending</p>
+                <p class="cinzel font-bold text-sm" style="color:#dc2626;">${formatAmount(pending)}</p>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="flex justify-between text-xs mb-1" style="color:#a07040;">
+                <span>Collection Progress</span>
+                <span class="font-semibold" style="color:#c2710c;">${pct}%</span>
+              </div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width:${pct}%"></div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between mt-3 pt-3 border-t border-amber-100">
+              <span class="text-xs" style="color:#a07040;">👥 ${event.total_donors} Donors</span>
+              <span class="text-xs font-semibold" style="color:#c2710c;">View Details →</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterEvents(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.style.background = 'white';
+        btn.style.color = '#c2710c';
+      });
+      const active = document.getElementById('filter-' + filter);
+      active.style.background = '#c2710c';
+      active.style.color = 'white';
+      renderEvents();
+    }
+
+    function searchEvents(q) {
+      searchQuery = q;
+      renderEvents();
+    }
+
+    function updateSummaryCards() {
+      const events = mockEvents.map(e => ({ ...e, status: getEventStatus(e) }));
+      document.getElementById('activeEvents').textContent =
+        events.filter(e => e.status === 'active').length;
+      document.getElementById('totalReceived').textContent =
+        formatAmount(events.reduce((s, e) => s + e.total_received, 0));
+      document.getElementById('totalPending').textContent =
+        formatAmount(events.reduce((s, e) => s + (e.total_promised - e.total_received), 0));
+      document.getElementById('totalDonors').textContent =
+        events.reduce((s, e) => s + e.total_donors, 0);
+    }
+
+    function goToEvent(id) {
+      window.location.href = `/events/${id}`;
+    }
+
+    function openCreateEvent() {
+      window.location.href = '/events/create';
+    }
+
+    function openCreateUser() {
+      window.location.href = '/users/create';
+    }
+
+    function logout() {
+      window.location.href = '/login';
+    }
+
+    // init
+    updateSummaryCards();
+    renderEvents();
+  </script>
+
+</body>
+</html>
