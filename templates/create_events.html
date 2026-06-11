@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dravya — Create Event</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+    body { font-family: 'Crimson Text', serif; background-color: #fffbf2; }
+    .cinzel { font-family: 'Cinzel', serif; }
+    .top-strip {
+      background: repeating-linear-gradient(90deg,#c2710c 0px,#c2710c 8px,#e89a3c 8px,#e89a3c 16px,#fffbf2 16px,#fffbf2 24px);
+      height: 5px;
+    }
+    .navbar { background: linear-gradient(135deg, #7a2e00, #c2710c); }
+    .nav-link { color: #fde9c9; font-size: 0.85rem; letter-spacing: 0.08em; transition: color 0.2s; }
+    .nav-link:hover { color: #fff; }
+    .form-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: #7a2e00;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .form-input {
+      width: 100%;
+      border: 1px solid #e5c99a;
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      font-family: 'Crimson Text', serif;
+      background: #fffdf7;
+      color: #3a1a00;
+      outline: none;
+    }
+    .form-input:focus {
+      border-color: #c2710c;
+      box-shadow: 0 0 0 3px rgba(194,113,12,0.1);
+    }
+    .form-input::placeholder { color: #c4a47a; }
+    select.form-input { cursor: pointer; }
+    textarea.form-input { resize: vertical; }
+    .btn-primary {
+      background: linear-gradient(135deg, #e07b12, #c2710c);
+      color: white; border-radius: 4px;
+      font-size: 0.78rem; letter-spacing: 0.08em;
+      transition: all 0.2s; border: none; cursor: pointer;
+      display: inline-block;
+    }
+    .btn-primary:hover { background: linear-gradient(135deg, #c2710c, #a05e08); }
+    .btn-secondary {
+      background: white;
+      color: #c2710c;
+      border: 1px solid #e5c99a;
+      border-radius: 4px;
+      font-size: 0.78rem; letter-spacing: 0.08em;
+      cursor: pointer;
+      display: inline-block;
+    }
+    .btn-secondary:hover { background: #fffbf2; border-color: #c2710c; }
+    .section-card {
+      background: white;
+      border: 1px solid #f0d9b5;
+      border-top: 4px solid #c2710c;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(194,113,12,0.08);
+    }
+    .divider {
+      display: flex; align-items: center; gap: 8px;
+      color: #c2710c; font-size: 0.75rem; letter-spacing: 0.12em;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: #e89a3c;
+    }
+    .role-card {
+      background: #fffbf2;
+      border: 1px solid #f0d9b5;
+      border-left: 3px solid #c2710c;
+      border-radius: 4px;
+      padding: 16px;
+    }
+    .required-star { color: #c2710c; margin-left: 2px; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <div class="top-strip"></div>
+
+  <nav class="navbar px-6 py-3 flex items-center justify-between shadow-md">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl">🕉</span>
+      <div>
+        <h1 class="cinzel text-white font-bold text-lg tracking-widest leading-tight">DRAVYA</h1>
+        <p class="text-xs tracking-widest" style="color:#fde9c9; font-size:0.65rem;">JAIN TEMPLE MANAGEMENT</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-6">
+      <a href="/dashboard" class="nav-link cinzel">Dashboard</a>
+      <a href="/donors" class="nav-link cinzel">Donors & Families</a>
+      <a href="/reports" class="nav-link cinzel">Reports</a>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <a href="/events/create"
+        class="btn-primary cinzel px-4 py-2 text-xs font-semibold tracking-widest">
+        + CREATE EVENT
+      </a>
+      <button
+        class="cinzel px-4 py-2 text-xs font-semibold tracking-widest border border-amber-300 rounded"
+        style="color:#fde9c9;">
+        + USER
+      </button>
+      <div class="w-px h-6 bg-amber-400 opacity-40"></div>
+      <a href="/login" class="nav-link cinzel text-xs">LOGOUT</a>
+    </div>
+  </nav>
+
+  <main class="max-w-3xl mx-auto px-6 py-8">
+
+    <!-- breadcrumb -->
+    <div class="flex items-center gap-2 text-xs mb-5" style="color:#a07040;">
+      <a href="/dashboard" class="hover:text-amber-700">Dashboard</a>
+      <span>›</span>
+      <span style="color:#c2710c; font-weight:600;">Create Event</span>
+    </div>
+
+    <!-- page title -->
+    <div class="mb-6">
+      <div class="divider mb-3">NEW EVENT</div>
+      <h2 class="cinzel text-2xl font-bold" style="color:#7a2e00;">Create Event</h2>
+      <p class="text-sm mt-1" style="color:#a07040;">Set up a new donation or community event.</p>
+    </div>
+
+    <!-- form -->
+    <form method="POST" action="/api/events/">
+
+      <!-- Section 1: Event Information -->
+      <div class="section-card p-6 mb-5">
+        <h3 class="cinzel font-bold text-sm tracking-widest mb-5" style="color:#7a2e00;">Event Information</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+          <div class="md:col-span-2">
+            <label class="form-label" for="event_name">Event Name <span class="required-star">*</span></label>
+            <input type="text" id="event_name" name="event_name" class="form-input"
+              placeholder="e.g. Paryushan 2026"
+              maxlength="100" required />
+          </div>
+
+          <div>
+            <label class="form-label" for="category">Category <span class="required-star">*</span></label>
+            <select id="category" name="category" class="form-input" required>
+              <option value="">— Select Category —</option>
+              <option value="Religious">Religious</option>
+              <option value="Festival">Festival</option>
+              <option value="Infrastructure">Infrastructure</option>
+              <option value="Community">Community</option>
+              <option value="Education">Education</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div></div>
+
+          <div>
+            <label class="form-label" for="start_date">Start Date <span class="required-star">*</span></label>
+            <input type="date" id="start_date" name="start_date" class="form-input" required />
+          </div>
+
+          <div>
+            <label class="form-label" for="end_date">End Date <span class="required-star">*</span></label>
+            <input type="date" id="end_date" name="end_date" class="form-input" required />
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="form-label" for="description">Description</label>
+            <textarea id="description" name="description" class="form-input" rows="3"
+              placeholder="Brief description of the event, its purpose and significance..."
+              maxlength="500"></textarea>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Section 2: Roles & Subcategories -->
+      <div class="section-card p-6 mb-5">
+        <div class="mb-4">
+          <h3 class="cinzel font-bold text-sm tracking-widest" style="color:#7a2e00;">Roles & Subcategories</h3>
+          <p class="text-xs mt-1" style="color:#a07040;">Optional. Add specific roles or fundraising subcategories. Each can carry its own target amount.</p>
+        </div>
+
+        <div class="mb-4" style="border-top: 1px dashed #e5c99a;"></div>
+
+        <!-- Role 1 -->
+        <div class="role-card mb-4">
+          <p class="cinzel text-xs font-bold tracking-widest mb-3" style="color:#7a2e00;">ROLE 1</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="form-label" for="role_name_1">Role Name</label>
+              <input type="text" id="role_name_1" name="roles[0][role_name]" class="form-input"
+                placeholder="e.g. Samvatsari Dana" />
+            </div>
+            <div>
+              <label class="form-label" for="role_amount_1">Target Amount (₹)</label>
+              <input type="number" id="role_amount_1" name="roles[0][target_amount]" class="form-input"
+                placeholder="e.g. 50000" min="0" step="100" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="form-label" for="role_desc_1">Description</label>
+              <textarea id="role_desc_1" name="roles[0][description]" class="form-input" rows="2"
+                placeholder="Brief description of this role..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Role 2 -->
+        <div class="role-card mb-4">
+          <p class="cinzel text-xs font-bold tracking-widest mb-3" style="color:#7a2e00;">ROLE 2</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="form-label" for="role_name_2">Role Name</label>
+              <input type="text" id="role_name_2" name="roles[1][role_name]" class="form-input"
+                placeholder="e.g. Ayambil Seva" />
+            </div>
+            <div>
+              <label class="form-label" for="role_amount_2">Target Amount (₹)</label>
+              <input type="number" id="role_amount_2" name="roles[1][target_amount]" class="form-input"
+                placeholder="e.g. 25000" min="0" step="100" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="form-label" for="role_desc_2">Description</label>
+              <textarea id="role_desc_2" name="roles[1][description]" class="form-input" rows="2"
+                placeholder="Brief description of this role..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Role 3 -->
+        <div class="role-card">
+          <p class="cinzel text-xs font-bold tracking-widest mb-3" style="color:#7a2e00;">ROLE 3</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="form-label" for="role_name_3">Role Name</label>
+              <input type="text" id="role_name_3" name="roles[2][role_name]" class="form-input"
+                placeholder="e.g. Puja Sponsorship" />
+            </div>
+            <div>
+              <label class="form-label" for="role_amount_3">Target Amount (₹)</label>
+              <input type="number" id="role_amount_3" name="roles[2][target_amount]" class="form-input"
+                placeholder="e.g. 10000" min="0" step="100" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="form-label" for="role_desc_3">Description</label>
+              <textarea id="role_desc_3" name="roles[2][description]" class="form-input" rows="2"
+                placeholder="Brief description of this role..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 p-3 rounded text-xs" style="background:#fffbf2; border:1px solid #f0d9b5; color:#a07040;">
+          <span style="color:#c2710c; font-weight:700;">Note:</span> Leave role fields empty if not needed. More roles can be added from the event detail page after creation.
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center justify-between">
+        <a href="/dashboard"
+          class="btn-secondary cinzel px-5 py-2.5 text-xs font-semibold tracking-widest">
+          CANCEL
+        </a>
+        <button type="submit"
+          class="btn-primary cinzel px-8 py-2.5 text-xs font-semibold tracking-widest">
+          CREATE EVENT
+        </button>
+      </div>
+
+    </form>
+
+  </main>
+
+  <div class="top-strip mt-10"></div>
+
+</body>
+</html>
