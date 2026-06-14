@@ -180,56 +180,21 @@
   <div class="top-strip mt-8"></div>
 
   <script>
-    // ── mock data (replace with fetch('/events/') when backend ready) ──
-    const mockEvents = [
-      {
-        event_id: 1,
-        event_name: "Paryushan 2026",
-        category: "Religious",
-        start_date: "2026-08-15",
-        end_date: "2026-08-23",
-        total_promised: 250000,
-        total_received: 175000,
-        total_donors: 48,
-        status: "upcoming"
-      },
-      {
-        event_id: 2,
-        event_name: "Mahavir Jayanti",
-        category: "Festival",
-        start_date: "2026-04-10",
-        end_date: "2026-04-10",
-        total_promised: 80000,
-        total_received: 80000,
-        total_donors: 22,
-        status: "completed"
-      },
-      {
-        event_id: 3,
-        event_name: "Temple Renovation Fund",
-        category: "Infrastructure",
-        start_date: "2026-01-01",
-        end_date: "2026-12-31",
-        total_promised: 500000,
-        total_received: 210000,
-        total_donors: 91,
-        status: "active"
-      }
-    ];
-
+    let allEvents = [];
     let currentFilter = 'all';
     let searchQuery = '';
-
+    
     function formatAmount(n) {
-      if (n >= 100000) return '₹' + (n/100000).toFixed(1) + 'L';
-      if (n >= 1000) return '₹' + (n/1000).toFixed(1) + 'K';
+      if (n >= 100000) return '₹' + (n / 100000).toFixed(1) + 'L';
+      if (n >= 1000) return '₹' + (n / 1000).toFixed(1) + 'K';
       return '₹' + n;
     }
-
+    
     function formatDate(d) {
-      return new Date(d).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+      if (!d) return '—';
+      return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
     }
-
+    
     function getStatusBadge(status) {
       const map = {
         active:    '<span class="badge badge-active">Active</span>',
@@ -238,74 +203,68 @@
       };
       return map[status] || '';
     }
-
-    function getEventStatus(event) {
-      const now = new Date();
-      const start = new Date(event.start_date);
-      const end = new Date(event.end_date);
-      if (now < start) return 'upcoming';
-      if (now > end) return 'completed';
-      return 'active';
-    }
-
+    
     function renderEvents() {
       const grid = document.getElementById('eventsGrid');
       const empty = document.getElementById('emptyState');
-
-      let filtered = mockEvents.map(e => ({ ...e, status: getEventStatus(e) }));
-
+    
+      let filtered = [...allEvents];
+    
       if (currentFilter !== 'all') {
         filtered = filtered.filter(e => e.status === currentFilter);
       }
-
+    
       if (searchQuery) {
         filtered = filtered.filter(e =>
-          e.event_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          e.category.toLowerCase().includes(searchQuery.toLowerCase())
+          (e.event_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (e.category || '').toLowerCase().includes(searchQuery.toLowerCase())
         );
       }
-
+    
       if (filtered.length === 0) {
         grid.innerHTML = '';
         empty.classList.remove('hidden');
         return;
       }
-
+    
       empty.classList.add('hidden');
-
+    
       grid.innerHTML = filtered.map(event => {
-        const pct = Math.min(100, Math.round((event.total_received / event.total_promised) * 100));
-        const pending = event.total_promised - event.total_received;
+        const promised = event.total_promised || 0;
+        const received = event.total_received || 0;
+        const pending = promised - received;
+        const pct = promised > 0 ? Math.min(100, Math.round((received / promised) * 100)) : 0;
+    
         return `
           <div class="event-card p-5" onclick="goToEvent(${event.event_id})">
             <div class="flex items-start justify-between mb-3">
               <div>
-                <h3 class="cinzel font-bold text-base leading-tight" style="color:#7a2e00;">${event.event_name}</h3>
-                <p class="text-xs mt-0.5" style="color:#a07040;">${event.category}</p>
+                <h3 class="cinzel font-bold text-base leading-tight" style="color:#7a2e00;">${event.event_name || 'Unnamed Event'}</h3>
+                <p class="text-xs mt-0.5" style="color:#a07040;">${event.category || '—'}</p>
               </div>
               ${getStatusBadge(event.status)}
             </div>
-
+    
             <div class="flex items-center gap-1 text-xs mb-4" style="color:#a07040;">
               <span>📅</span>
               <span>${formatDate(event.start_date)} — ${formatDate(event.end_date)}</span>
             </div>
-
+    
             <div class="grid grid-cols-3 gap-2 mb-4 text-center">
               <div>
                 <p class="text-xs" style="color:#a07040;">Promised</p>
-                <p class="cinzel font-bold text-sm" style="color:#7a2e00;">${formatAmount(event.total_promised)}</p>
+                <p class="cinzel font-bold text-sm" style="color:#7a2e00;">${formatAmount(promised)}</p>
               </div>
               <div>
                 <p class="text-xs" style="color:#a07040;">Received</p>
-                <p class="cinzel font-bold text-sm" style="color:#16a34a;">${formatAmount(event.total_received)}</p>
+                <p class="cinzel font-bold text-sm" style="color:#16a34a;">${formatAmount(received)}</p>
               </div>
               <div>
                 <p class="text-xs" style="color:#a07040;">Pending</p>
                 <p class="cinzel font-bold text-sm" style="color:#dc2626;">${formatAmount(pending)}</p>
               </div>
             </div>
-
+    
             <div class="mb-3">
               <div class="flex justify-between text-xs mb-1" style="color:#a07040;">
                 <span>Collection Progress</span>
@@ -315,7 +274,7 @@
                 <div class="progress-bar-fill" style="width:${pct}%"></div>
               </div>
             </div>
-
+    
             <div class="flex items-center justify-between mt-3 pt-3 border-t border-amber-100">
               <span class="text-xs" style="color:#a07040;">👥 ${event.total_donors} Donors</span>
               <span class="text-xs font-semibold" style="color:#c2710c;">View Details →</span>
@@ -324,7 +283,14 @@
         `;
       }).join('');
     }
-
+    
+    function updateSummaryCards(summary) {
+      document.getElementById('activeEvents').textContent = summary.active_events;
+      document.getElementById('totalReceived').textContent = formatAmount(summary.total_received);
+      document.getElementById('totalPending').textContent = formatAmount(summary.total_pending);
+      document.getElementById('totalDonors').textContent = summary.total_donors;
+    }
+    
     function filterEvents(filter) {
       currentFilter = filter;
       document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -336,43 +302,44 @@
       active.style.color = 'white';
       renderEvents();
     }
-
+    
     function searchEvents(q) {
       searchQuery = q;
       renderEvents();
     }
-
-    function updateSummaryCards() {
-      const events = mockEvents.map(e => ({ ...e, status: getEventStatus(e) }));
-      document.getElementById('activeEvents').textContent =
-        events.filter(e => e.status === 'active').length;
-      document.getElementById('totalReceived').textContent =
-        formatAmount(events.reduce((s, e) => s + e.total_received, 0));
-      document.getElementById('totalPending').textContent =
-        formatAmount(events.reduce((s, e) => s + (e.total_promised - e.total_received), 0));
-      document.getElementById('totalDonors').textContent =
-        events.reduce((s, e) => s + e.total_donors, 0);
-    }
-
+    
     function goToEvent(id) {
       window.location.href = `/events/${id}`;
     }
-
+    
     function openCreateEvent() {
       window.location.href = '/events/create';
     }
-
+    
     function openCreateUser() {
       window.location.href = '/users/create';
     }
-
+    
     function logout() {
       window.location.href = '/login';
     }
-
-    // init
-    updateSummaryCards();
-    renderEvents();
+    
+    // ── init — fetch real data ──
+    async function init() {
+      try {
+        const res = await fetch('/dashboard/summary');
+        if (!res.ok) throw new Error('Failed to fetch dashboard data');
+        const data = await res.json();
+        allEvents = data.events;
+        updateSummaryCards(data.summary);
+        renderEvents();
+      } catch (err) {
+        console.error('Dashboard load error:', err);
+        document.getElementById('emptyState').classList.remove('hidden');
+      }
+    }
+    
+    init();
   </script>
 
 </body>
