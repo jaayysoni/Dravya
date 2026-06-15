@@ -312,9 +312,10 @@
       window.location.href = `/events/${id}`;
     }
     
-    function openCreateEvent() {
-      window.location.href = '/events/create';
-    }
+// NEW
+function openCreateEvent() {
+  document.getElementById('createEventModal').classList.remove('hidden');
+}
     
     function openCreateUser() {
       window.location.href = '/users/create';
@@ -340,7 +341,144 @@
     }
     
     init();
+
+    function closeCreateEvent() {
+      document.getElementById('createEventModal').classList.add('hidden');
+      // clear fields
+      ['ev_name','ev_category','ev_start','ev_end','ev_description'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      document.getElementById('ev_error').classList.add('hidden');
+    }
+    
+    async function submitCreateEvent() {
+      const name = document.getElementById('ev_name').value.trim();
+      const category = document.getElementById('ev_category').value;
+      const start = document.getElementById('ev_start').value;
+      const end = document.getElementById('ev_end').value;
+      const description = document.getElementById('ev_description').value.trim();
+      const errorEl = document.getElementById('ev_error');
+    
+      // basic validation
+      if (!name || !category || !start || !end) {
+        errorEl.textContent = 'Please fill in all required fields.';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+      if (new Date(end) <= new Date(start)) {
+        errorEl.textContent = 'End date must be after start date.';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+    
+      errorEl.classList.add('hidden');
+    
+      try {
+        const res = await fetch('/events/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event_name: name,
+            category: category,
+            start_date: new Date(start).toISOString(),
+            end_date: new Date(end).toISOString(),
+            description: description || null
+          })
+        });
+    
+        if (!res.ok) {
+          const err = await res.json();
+          errorEl.textContent = err.detail || 'Failed to create event.';
+          errorEl.classList.remove('hidden');
+          return;
+        }
+    
+        closeCreateEvent();
+        init(); // refresh dashboard
+      } catch (e) {
+        errorEl.textContent = 'Network error. Please try again.';
+        errorEl.classList.remove('hidden');
+      }
+    }
+
+
+
   </script>
+
+<!-- Create Event Modal -->
+<div id="createEventModal" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background:rgba(0,0,0,0.5);">
+  <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg mx-4" style="border-top: 4px solid #c2710c;">
+    
+    <!-- modal header -->
+    <div class="px-6 py-4 border-b border-amber-100 flex items-center justify-between">
+      <div>
+        <h3 class="cinzel font-bold text-lg" style="color:#7a2e00;">Create New Event</h3>
+        <p class="text-xs mt-0.5" style="color:#a07040;">Fill in the details to create a new temple event</p>
+      </div>
+      <button onclick="closeCreateEvent()" class="text-amber-400 hover:text-amber-700 text-2xl leading-none">&times;</button>
+    </div>
+
+    <!-- modal body -->
+    <div class="px-6 py-5 space-y-4">
+
+      <div>
+        <label class="block text-xs font-semibold tracking-widest uppercase mb-1" style="color:#a07040;">Event Name *</label>
+        <input id="ev_name" type="text" placeholder="e.g. Paryushana Mahotsav 2026"
+          class="w-full border border-amber-200 rounded px-3 py-2 text-sm bg-amber-50 focus:outline-none focus:border-amber-500"/>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold tracking-widest uppercase mb-1" style="color:#a07040;">Category *</label>
+        <select id="ev_category"
+          class="w-full border border-amber-200 rounded px-3 py-2 text-sm bg-amber-50 focus:outline-none focus:border-amber-500">
+          <option value="">— Select Category —</option>
+          <option value="Religious">Religious</option>
+          <option value="Festival">Festival</option>
+          <option value="Infrastructure">Infrastructure</option>
+          <option value="Cultural">Cultural</option>
+          <option value="Charitable">Charitable</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold tracking-widest uppercase mb-1" style="color:#a07040;">Start Date *</label>
+          <input id="ev_start" type="datetime-local"
+            class="w-full border border-amber-200 rounded px-3 py-2 text-sm bg-amber-50 focus:outline-none focus:border-amber-500"/>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold tracking-widest uppercase mb-1" style="color:#a07040;">End Date *</label>
+          <input id="ev_end" type="datetime-local"
+            class="w-full border border-amber-200 rounded px-3 py-2 text-sm bg-amber-50 focus:outline-none focus:border-amber-500"/>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold tracking-widest uppercase mb-1" style="color:#a07040;">Description</label>
+        <textarea id="ev_description" rows="3" placeholder="Brief description of the event..."
+          class="w-full border border-amber-200 rounded px-3 py-2 text-sm bg-amber-50 focus:outline-none focus:border-amber-500 resize-none"></textarea>
+      </div>
+
+      <!-- error message -->
+      <p id="ev_error" class="hidden text-xs text-red-600 font-semibold"></p>
+
+    </div>
+
+    <!-- modal footer -->
+    <div class="px-6 py-4 border-t border-amber-100 flex justify-end gap-3">
+      <button onclick="closeCreateEvent()"
+        class="cinzel text-xs px-5 py-2 rounded border border-amber-300 font-semibold"
+        style="color:#c2710c;">CANCEL</button>
+      <button onclick="submitCreateEvent()"
+        class="btn-primary cinzel px-5 py-2 text-xs font-semibold tracking-widest">
+        CREATE EVENT
+      </button>
+    </div>
+
+  </div>
+</div>
+
 
 </body>
 </html>
