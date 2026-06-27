@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dravya — Event Detail</title>
+  <title>Dravya — {{ event.event_name }}</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
     body { font-family: 'Crimson Text', serif; background-color: #fffbf2; }
@@ -33,30 +32,31 @@
       color: white; border-radius: 4px;
       font-size: 0.78rem; letter-spacing: 0.08em;
       transition: all 0.2s; padding: 8px 18px;
+      text-decoration: none; display: inline-block;
     }
     .btn-primary:hover { background: linear-gradient(135deg,#c2710c,#a05e08); transform: translateY(-1px); }
     .btn-outline {
       border: 1px solid #c2710c; color: #c2710c;
       border-radius: 4px; font-size: 0.78rem;
-      letter-spacing: 0.08em; transition: all 0.2s; padding: 7px 16px;
+      letter-spacing: 0.08em; transition: all 0.2s;
+      padding: 7px 16px; text-decoration: none; display: inline-block;
     }
     .btn-outline:hover { background: #fff8f0; }
-    .btn-ghost {
-      border: 1px solid #e5e7eb; color: #6b7280;
+    .btn-danger {
+      border: 1px solid #dc2626; color: #dc2626;
       border-radius: 4px; font-size: 0.78rem;
-      transition: all 0.2s; padding: 7px 16px;
+      letter-spacing: 0.08em; transition: all 0.2s;
+      padding: 7px 16px; text-decoration: none; display: inline-block;
     }
-    .btn-ghost:hover { border-color: #c2710c; color: #c2710c; }
+    .btn-danger:hover { background: #fef2f2; }
     table { width: 100%; border-collapse: collapse; }
     th {
       background: #fef3e2; color: #7a2e00;
       font-family: 'Cinzel', serif; font-size: 0.7rem;
       letter-spacing: 0.1em; text-transform: uppercase;
       padding: 10px 14px; text-align: left;
-      border-bottom: 2px solid #f0d9b5; cursor: pointer;
-      user-select: none;
+      border-bottom: 2px solid #f0d9b5;
     }
-    th:hover { background: #fde9c9; }
     td { padding: 11px 14px; border-bottom: 1px solid #fef3e2; font-size: 0.9rem; color: #4a3000; }
     tr:hover td { background: #fffbf5; }
     .badge { font-size: 0.68rem; padding: 2px 9px; border-radius: 9999px; font-weight: 600; letter-spacing: 0.04em; }
@@ -64,14 +64,23 @@
     .badge-partial  { background: #dbeafe; color: #1e40af; }
     .badge-completed{ background: #d1fae5; color: #065f46; }
     .badge-cash     { background: #f3f4f6; color: #374151; }
+    .badge-labh     { background: #fef9c3; color: #854d0e; }
+    .badge-inkind   { background: #e0f2fe; color: #0c4a6e; }
     .badge-role     { background: #ede9fe; color: #5b21b6; }
-    .badge-anon     { background: #fce7f3; color: #9d174d; }
+    .badge-active   { background: #fef3c7; color: #92400e; }
+    .badge-upcoming { background: #dbeafe; color: #1e40af; }
+    .badge-done     { background: #d1fae5; color: #065f46; }
     .divider {
       display: flex; align-items: center; gap: 8px;
       color: #c2710c; font-size: 0.75rem; letter-spacing: 0.12em;
     }
     .divider::before, .divider::after { content:''; flex:1; height:1px; background:#e89a3c; }
-    input, select, textarea {
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    input[type="tel"],
+    input[type="email"],
+    select, textarea {
       border: 1px solid #f0d9b5; border-radius: 4px;
       padding: 8px 12px; font-size: 0.9rem;
       background: #fffbf5; color: #4a3000;
@@ -82,41 +91,45 @@
       outline: none; border-color: #c2710c;
       box-shadow: 0 0 0 2px rgba(194,113,12,0.12);
     }
+    .tab-link {
+      font-family: 'Cinzel', serif; font-size: 0.78rem;
+      letter-spacing: 0.1em; padding: 9px 22px;
+      border-bottom: 3px solid transparent;
+      color: #a07040; transition: all 0.2s;
+      text-decoration: none; display: inline-block;
+    }
+    .tab-link:hover { color: #c2710c; }
+    .tab-link.active-tab { color: #c2710c; border-bottom-color: #c2710c; }
+    .progress-bar-bg { background: #fde9c9; border-radius: 9999px; height: 10px; }
+    .progress-bar-fill { background: linear-gradient(90deg,#e07b12,#c2710c); border-radius: 9999px; height: 10px; }
+
+    /* modal */
     .modal-overlay {
       display: none; position: fixed; inset: 0;
       background: rgba(0,0,0,0.5); z-index: 50;
       align-items: center; justify-content: center;
     }
-    .modal-overlay.open { display: flex; }
-    .modal {
-      background: #fffbf2; border: 2px solid #c2710c;
-      border-radius: 6px; width: 100%; max-width: 560px;
+    .modal-overlay:target { display: flex; }
+    .modal-box {
+      background: #fffbf2; border-top: 4px solid #c2710c;
+      border-radius: 6px; width: 100%; max-width: 540px;
       max-height: 90vh; overflow-y: auto;
       padding: 32px; position: relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
     }
-    .tab-btn {
-      font-family: 'Cinzel', serif; font-size: 0.78rem;
-      letter-spacing: 0.1em; padding: 9px 22px;
-      border-bottom: 3px solid transparent;
-      color: #a07040; transition: all 0.2s; cursor: pointer;
+    .modal-box-danger {
+      background: #fffbf2; border-top: 4px solid #dc2626;
+      border-radius: 6px; width: 100%; max-width: 420px;
+      max-height: 90vh; overflow-y: auto;
+      padding: 32px; position: relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
     }
-    .tab-btn.active { color: #c2710c; border-bottom-color: #c2710c; }
-    .progress-bar-bg { background: #fde9c9; border-radius: 9999px; height: 10px; }
-    .progress-bar-fill { background: linear-gradient(90deg,#e07b12,#c2710c); border-radius: 9999px; height: 10px; transition: width 0.6s; }
-    .edit-field {
-      border: 1px dashed #e89a3c; border-radius: 4px;
-      padding: 4px 8px; background: #fffbf5;
-      font-family: 'Cinzel', serif; color: #7a2e00;
-      font-weight: bold;
-    }
-    .sort-icon { font-size: 0.65rem; margin-left: 4px; }
   </style>
 </head>
 <body class="min-h-screen">
 
   <div class="top-strip"></div>
 
-  <!-- navbar -->
   <nav class="navbar px-6 py-3 flex items-center justify-between shadow-md">
     <div class="flex items-center gap-3">
       <span class="text-2xl">🕉</span>
@@ -127,771 +140,895 @@
     </div>
     <div class="flex items-center gap-6">
       <a href="/dashboard" class="nav-link cinzel">Dashboard</a>
-      <a href="/donors" class="nav-link cinzel">Donors & Families</a>
+      <a href="/donors" class="nav-link cinzel">Donors &amp; Families</a>
       <a href="/reports" class="nav-link cinzel">Reports</a>
     </div>
     <div class="flex items-center gap-3">
-      <button onclick="openAddPledge()" class="btn-primary cinzel font-semibold tracking-widest">+ ADD PLEDGE</button>
-      <button onclick="openRecordPayment()" class="btn-outline cinzel font-semibold tracking-widest">💰 PAYMENT</button>
+      <a href="#addCashPledgeModal"
+        class="btn-primary cinzel font-semibold tracking-widest"
+        style="text-decoration:none;">+ ADD PLEDGE</a>
+      <a href="#recordPaymentModal"
+        class="btn-outline cinzel font-semibold tracking-widest"
+        style="text-decoration:none;">💰 PAYMENT</a>
       <div class="w-px h-6 bg-amber-400 opacity-40"></div>
-      <button class="nav-link cinzel text-xs" onclick="logout()">LOGOUT</button>
+      <a href="/logout" class="nav-link cinzel text-xs" style="text-decoration:none;">LOGOUT</a>
     </div>
   </nav>
 
   <main class="max-w-7xl mx-auto px-6 py-8">
 
-    <!-- back -->
-    <button onclick="window.history.back()"
-      class="flex items-center gap-1 text-sm mb-5 hover:underline" style="color:#c2710c;">
-      ← Back to Dashboard
-    </button>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="mb-4 px-4 py-3 rounded text-sm font-semibold
+            {% if category == 'error' %}bg-red-50 border border-red-200 text-red-700
+            {% else %}bg-green-50 border border-green-200 text-green-700{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
 
-    <!-- ── EVENT HEADER ── -->
+    <!-- breadcrumb -->
+    <div class="flex items-center gap-2 text-xs mb-5" style="color:#a07040;">
+      <a href="/dashboard" class="hover:underline" style="color:#c2710c;">Dashboard</a>
+      <span>›</span>
+      <span style="color:#7a2e00; font-weight:600;">{{ event.event_name }}</span>
+    </div>
+
+    <!-- EVENT HEADER -->
     <div class="card p-6 mb-6">
-      <div class="flex items-start justify-between">
+      <div class="flex items-start justify-between gap-4">
         <div class="flex-1">
+
           <div class="flex items-center gap-3 mb-2">
-            <span id="eventStatusBadge" class="badge badge-pending">Active</span>
-            <span class="text-xs tracking-widest" style="color:#a07040;" id="eventCategory">Religious</span>
+            {% if event.status == 'active' %}
+              <span class="badge badge-active">Active</span>
+            {% elif event.status == 'upcoming' %}
+              <span class="badge badge-upcoming">Upcoming</span>
+            {% elif event.status == 'completed' %}
+              <span class="badge badge-done">Completed</span>
+            {% endif %}
+            <span class="text-xs tracking-widest" style="color:#a07040;">{{ event.category or '—' }}</span>
           </div>
 
-          <!-- editable event name -->
-          <div class="flex items-center gap-3 mb-1">
-            <h2 class="cinzel text-2xl font-bold" style="color:#7a2e00;" id="eventNameDisplay">Paryushan 2026</h2>
-            <button onclick="toggleEditEvent()" class="btn-ghost text-xs px-3 py-1 cinzel">✏ EDIT</button>
-            <button onclick="saveEventChanges()" id="saveEventBtn" class="btn-primary text-xs px-3 py-1 cinzel hidden">✓ SAVE</button>
+          <h2 class="cinzel text-2xl font-bold mb-1" style="color:#7a2e00;">{{ event.event_name }}</h2>
+
+          <div class="flex items-center gap-4 mt-2 flex-wrap">
+            <span class="text-sm" style="color:#a07040;">
+              📅 {{ event.start_date | format_date }} — {{ event.end_date | format_date }}
+            </span>
+            {% if event.description %}
+              <span class="text-sm" style="color:#a07040;">{{ event.description }}</span>
+            {% endif %}
           </div>
 
-          <!-- edit form (hidden by default) -->
-          <div id="editEventForm" class="hidden mt-4 grid grid-cols-2 gap-4">
-            <div>
-              <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Event Name</label>
-              <input type="text" id="edit-name" value="Paryushan 2026"/>
-            </div>
-            <div>
-              <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Category</label>
-              <input type="text" id="edit-category" value="Religious"/>
-            </div>
-            <div>
-              <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Start Date</label>
-              <input type="date" id="edit-start" value="2026-08-15"/>
-            </div>
-            <div>
-              <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">End Date</label>
-              <input type="date" id="edit-end" value="2026-08-23"/>
-            </div>
-            <div class="col-span-2">
-              <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Description</label>
-              <textarea id="edit-desc" rows="2">Annual Paryushan festival with full community participation.</textarea>
-            </div>
-          </div>
+        </div>
 
-          <!-- dates display -->
-          <div id="eventDatesDisplay" class="flex items-center gap-4 mt-2">
-            <span class="text-sm" style="color:#a07040;">📅 15 Aug 2026 — 23 Aug 2026</span>
-            <span class="text-sm" style="color:#a07040;" id="eventDescDisplay">Annual Paryushan festival with full community participation.</span>
-          </div>
+        <!-- action buttons -->
+        <div class="flex items-center gap-2 flex-shrink-0">
+          {% if current_user.role == 'admin' %}
+            <a href="#editEventModal"
+              class="btn-outline cinzel text-xs font-semibold tracking-widest"
+              style="text-decoration:none;">✎ EDIT</a>
+            <a href="#deleteEventModal"
+              class="btn-danger cinzel text-xs font-semibold tracking-widest"
+              style="text-decoration:none;">🗑 DELETE</a>
+          {% endif %}
         </div>
       </div>
     </div>
 
-    <!-- ── STAT CARDS ── -->
+    <!-- STAT CARDS -->
     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
       <div class="stat-card">
         <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Pledged</p>
-        <p class="cinzel text-xl font-bold" style="color:#c2710c;">₹2.5L</p>
+        <p class="cinzel text-xl font-bold" style="color:#c2710c;">
+          {{ event.total_pledged | format_amount }}
+        </p>
       </div>
       <div class="stat-card">
         <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Received</p>
-        <p class="cinzel text-xl font-bold" style="color:#16a34a;">₹1.75L</p>
+        <p class="cinzel text-xl font-bold" style="color:#16a34a;">
+          {{ event.total_received | format_amount }}
+        </p>
       </div>
       <div class="stat-card">
         <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Pending</p>
-        <p class="cinzel text-xl font-bold" style="color:#dc2626;">₹75K</p>
+        <p class="cinzel text-xl font-bold" style="color:#dc2626;">
+          {{ (event.total_pledged - event.total_received) | format_amount }}
+        </p>
       </div>
       <div class="stat-card">
         <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Expenses</p>
-        <p class="cinzel text-xl font-bold" style="color:#7c3aed;">₹12K</p>
+        <p class="cinzel text-xl font-bold" style="color:#7c3aed;">
+          {{ event.total_expenses | format_amount }}
+        </p>
       </div>
       <div class="stat-card">
         <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Total Donors</p>
-        <p class="cinzel text-xl font-bold" style="color:#c2710c;">48</p>
+        <p class="cinzel text-xl font-bold" style="color:#c2710c;">{{ event.total_donors or 0 }}</p>
       </div>
       <div class="stat-card">
         <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Pledges</p>
-        <p class="cinzel text-xl font-bold" style="color:#c2710c;">62</p>
+        <p class="cinzel text-xl font-bold" style="color:#c2710c;">{{ event.total_pledges or 0 }}</p>
       </div>
       <div class="stat-card" style="border-top-color:#9d174d;">
         <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Anonymous</p>
-        <p class="cinzel text-xl font-bold" style="color:#9d174d;">7</p>
+        <p class="cinzel text-xl font-bold" style="color:#9d174d;">{{ event.anonymous_count or 0 }}</p>
       </div>
     </div>
 
-    <!-- collection progress -->
+    <!-- COLLECTION PROGRESS -->
+    {% set pct = ((event.total_received / event.total_pledged * 100) | round | int) if event.total_pledged > 0 else 0 %}
+    {% set pct = [pct, 100] | min %}
     <div class="card p-5 mb-6">
       <div class="flex justify-between items-center mb-2">
         <p class="cinzel text-sm font-semibold" style="color:#7a2e00;">Collection Progress</p>
-        <p class="cinzel text-sm font-bold" style="color:#c2710c;">70%</p>
+        <p class="cinzel text-sm font-bold" style="color:#c2710c;">{{ pct }}%</p>
       </div>
       <div class="progress-bar-bg">
-        <div class="progress-bar-fill" style="width:70%"></div>
+        <div class="progress-bar-fill" style="width:{{ pct }}%;"></div>
       </div>
       <div class="flex justify-between text-xs mt-2" style="color:#a07040;">
-        <span>₹1,75,000 received</span>
-        <span>₹2,50,000 target</span>
+        <span>{{ event.total_received | format_amount }} received</span>
+        <span>{{ event.total_pledged | format_amount }} pledged</span>
       </div>
     </div>
 
-    <!-- ── TABS ── -->
+    <!-- TABS -->
+    {% set active_tab = request.args.get('tab', 'pledges') %}
     <div class="border-b border-amber-200 mb-5 flex">
-      <div class="tab-btn active" id="tab-pledges" onclick="switchTab('pledges')">DONORS & PLEDGES</div>
-      <div class="tab-btn" id="tab-roles" onclick="switchTab('roles')">ROLE PLAYERS</div>
-      <div class="tab-btn" id="tab-payments" onclick="switchTab('payments')">PAYMENTS</div>
+      <a href="/events/{{ event.event_id }}?tab=pledges"
+        class="tab-link cinzel {% if active_tab == 'pledges' %}active-tab{% endif %}">
+        DONORS &amp; PLEDGES
+      </a>
+      <a href="/events/{{ event.event_id }}?tab=roles"
+        class="tab-link cinzel {% if active_tab == 'roles' %}active-tab{% endif %}">
+        ROLE PLAYERS
+      </a>
+      <a href="/events/{{ event.event_id }}?tab=payments"
+        class="tab-link cinzel {% if active_tab == 'payments' %}active-tab{% endif %}">
+        PAYMENTS
+      </a>
     </div>
 
-    <!-- ── DONORS & PLEDGES TAB ── -->
-    <div id="panel-pledges">
-      <!-- filters -->
-      <div class="flex flex-wrap items-center gap-3 mb-4">
-        <input type="text" placeholder="Search donor name..."
-          oninput="searchPledges(this.value)"
-          style="width:220px;"/>
-        <select onchange="filterPledgeStatus(this.value)" style="width:150px;">
-          <option value="">All Status</option>
-          <option value="PENDING">Pending</option>
-          <option value="PARTIAL">Partial</option>
-          <option value="COMPLETED">Completed</option>
-        </select>
-        <select onchange="filterPledgeType(this.value)" style="width:150px;">
-          <option value="">All Types</option>
-          <option value="CASH">Cash</option>
-          <option value="LABH">Labh</option>
-          <option value="IN_KIND">In-Kind</option>
-        </select>
-        <select onchange="filterPledgeCategory(this.value)" style="width:150px;">
-          <option value="">All Categories</option>
-          <option value="DONATION">Donation</option>
-          <option value="ROLE">Role</option>
-        </select>
+
+    <!-- ══════════════════════════════════
+         TAB: DONORS & PLEDGES
+    ══════════════════════════════════ -->
+    {% if active_tab == 'pledges' %}
+
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+
+        <form method="GET" action="/events/{{ event.event_id }}" class="flex flex-wrap gap-2 items-center">
+          <input type="hidden" name="tab" value="pledges"/>
+          <input type="text" name="q"
+            value="{{ request.args.get('q', '') }}"
+            placeholder="Search donor name..."
+            style="width:200px;"/>
+          <select name="status" style="width:140px;">
+            <option value="">All Status</option>
+            {% for s in ['pending', 'partial', 'completed'] %}
+              <option value="{{ s }}"
+                {% if request.args.get('status') == s %}selected{% endif %}>
+                {{ s | capitalize }}
+              </option>
+            {% endfor %}
+          </select>
+          <select name="pledge_type" style="width:140px;">
+            <option value="">All Types</option>
+            {% for t in ['cash', 'labh', 'in_kind'] %}
+              <option value="{{ t }}"
+                {% if request.args.get('pledge_type') == t %}selected{% endif %}>
+                {{ t | replace('_', ' ') | capitalize }}
+              </option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn-primary cinzel text-xs font-semibold px-3 py-2">FILTER</button>
+          {% if request.args.get('q') or request.args.get('status') or request.args.get('pledge_type') %}
+            <a href="/events/{{ event.event_id }}?tab=pledges"
+              class="btn-outline cinzel text-xs font-semibold">✕ CLEAR</a>
+          {% endif %}
+        </form>
+
+        <div class="flex gap-2">
+          <a href="#addCashPledgeModal"
+            class="btn-primary cinzel text-xs font-semibold tracking-widest"
+            style="text-decoration:none;">+ CASH PLEDGE</a>
+          <a href="#addInKindPledgeModal"
+            class="btn-outline cinzel text-xs font-semibold tracking-widest"
+            style="text-decoration:none;">+ IN-KIND PLEDGE</a>
+        </div>
       </div>
 
       <div class="card overflow-hidden">
-        <table>
-          <thead>
-            <tr>
-              <th onclick="sortPledges('donor')">#  Donor <span class="sort-icon" id="sort-donor">↕</span></th>
-              <th onclick="sortPledges('type')">Type <span class="sort-icon" id="sort-type">↕</span></th>
-              <th onclick="sortPledges('category')">Category <span class="sort-icon" id="sort-category">↕</span></th>
-              <th onclick="sortPledges('amount')">Promised <span class="sort-icon" id="sort-amount">↕</span></th>
-              <th onclick="sortPledges('received')">Received <span class="sort-icon" id="sort-received">↕</span></th>
-              <th onclick="sortPledges('status')">Status <span class="sort-icon" id="sort-status">↕</span></th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="pledgesTableBody"></tbody>
-        </table>
-        <div id="pledgesEmpty" class="hidden text-center py-10">
-          <p class="text-3xl mb-2">🪔</p>
-          <p class="cinzel text-sm font-semibold" style="color:#c2710c;">No pledges found</p>
+        {% if pledges %}
+          <table>
+            <thead>
+              <tr>
+                <th>Donor</th>
+                <th>Type</th>
+                <th>Category</th>
+                <th>Promised</th>
+                <th>Received</th>
+                <th>Pending</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for pledge in pledges %}
+                <tr>
+                  <td>
+                    <div class="font-semibold" style="color:#7a2e00;">
+                      {{ pledge.donor_name }}
+                    </div>
+                    <div class="text-xs" style="color:#a07040;">#{{ pledge.pledge_id }}</div>
+                  </td>
+                  <td>
+                    {% if pledge.pledge_type == 'cash' %}
+                      <span class="badge badge-cash">Cash</span>
+                    {% elif pledge.pledge_type == 'labh' %}
+                      <span class="badge badge-labh">Labh</span>
+                    {% elif pledge.pledge_type == 'in_kind' %}
+                      <span class="badge badge-inkind">In-Kind</span>
+                    {% else %}
+                      <span class="badge badge-cash">{{ pledge.pledge_type }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if pledge.pledge_category == 'role' %}
+                      <span class="badge badge-role">Role</span>
+                    {% else %}
+                      <span class="badge badge-cash">Donation</span>
+                    {% endif %}
+                  </td>
+                  <td class="cinzel font-semibold" style="color:#7a2e00;">
+                    {{ pledge.promised_amount | format_amount }}
+                  </td>
+                  <td class="cinzel font-semibold" style="color:#16a34a;">
+                    {{ pledge.received_amount | format_amount }}
+                  </td>
+                  <td class="cinzel font-semibold" style="color:#dc2626;">
+                    {{ (pledge.promised_amount - pledge.received_amount) | format_amount }}
+                  </td>
+                  <td>
+                    {% if pledge.status == 'completed' %}
+                      <span class="badge badge-completed">Completed</span>
+                    {% elif pledge.status == 'partial' %}
+                      <span class="badge badge-partial">Partial</span>
+                    {% else %}
+                      <span class="badge badge-pending">Pending</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="flex gap-2">
+                      <a href="#recordPaymentModal"
+                        class="text-xs py-1 px-2 rounded border border-green-200 text-green-700 hover:bg-green-50"
+                        style="text-decoration:none;">💰 Pay</a>
+                      {% if current_user.role == 'admin' %}
+                        <a href="/events/{{ event.event_id }}/pledges/{{ pledge.pledge_id }}/edit"
+                          class="btn-outline text-xs py-1 px-2"
+                          style="text-decoration:none;">Edit</a>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+        {% else %}
+          <div class="text-center py-12">
+            <p class="text-3xl mb-2">🪔</p>
+            <p class="cinzel text-sm font-semibold" style="color:#c2710c;">No pledges found</p>
+            {% if request.args.get('q') or request.args.get('status') or request.args.get('pledge_type') %}
+              <p class="text-xs mt-1" style="color:#a07040;">
+                <a href="/events/{{ event.event_id }}?tab=pledges" style="color:#c2710c;">Clear filters</a>
+              </p>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+
+
+    <!-- ══════════════════════════════════
+         TAB: ROLE PLAYERS
+    ══════════════════════════════════ -->
+    {% elif active_tab == 'roles' %}
+
+      <div class="flex items-center justify-between gap-3 mb-4">
+        <form method="GET" action="/events/{{ event.event_id }}" class="flex gap-2 items-center">
+          <input type="hidden" name="tab" value="roles"/>
+          <input type="text" name="rq"
+            value="{{ request.args.get('rq', '') }}"
+            placeholder="Search role or donor..."
+            style="width:260px;"/>
+          <button type="submit" class="btn-primary cinzel text-xs font-semibold px-3 py-2">SEARCH</button>
+          {% if request.args.get('rq') %}
+            <a href="/events/{{ event.event_id }}?tab=roles"
+              class="btn-outline cinzel text-xs font-semibold">✕ CLEAR</a>
+          {% endif %}
+        </form>
+        <a href="#assignRoleModal"
+          class="btn-primary cinzel font-semibold tracking-widest"
+          style="text-decoration:none;">+ ASSIGN ROLE</a>
+      </div>
+
+      {% if roles %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {% for role in roles %}
+            <div class="card p-4" style="border-left:4px solid #7c3aed;">
+              <div class="flex items-start justify-between mb-2">
+                <div>
+                  <p class="cinzel font-bold text-sm" style="color:#5b21b6;">{{ role.role_name }}</p>
+                  <p class="text-sm font-semibold mt-0.5" style="color:#7a2e00;">{{ role.donor_name }}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="badge badge-role">Role</span>
+                  {% if current_user.role == 'admin' %}
+                    <a href="/events/{{ event.event_id }}/roles/{{ role.role_id }}/edit"
+                      class="text-xs" style="color:#c2710c; text-decoration:none;">✎</a>
+                  {% endif %}
+                </div>
+              </div>
+              <p class="text-xs mb-3" style="color:#a07040;">{{ role.description or '—' }}</p>
+              <div class="flex items-center justify-between pt-2 border-t border-amber-100">
+                <span class="cinzel font-bold text-sm" style="color:#c2710c;">
+                  {{ role.target_amount | format_amount }}
+                </span>
+                {% if role.status == 'completed' %}
+                  <span class="badge badge-completed">Completed</span>
+                {% elif role.status == 'partial' %}
+                  <span class="badge badge-partial">Partial</span>
+                {% else %}
+                  <span class="badge badge-pending">Pending</span>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
         </div>
-      </div>
-    </div>
 
-    <!-- ── ROLE PLAYERS TAB ── -->
-    <div id="panel-roles" class="hidden">
-      <div class="flex justify-between items-center mb-4">
-        <input type="text" placeholder="Search role or donor..." style="width:260px;"
-          oninput="searchRoles(this.value)"/>
-        <button onclick="openAddRole()" class="btn-primary cinzel font-semibold tracking-widest">+ ASSIGN ROLE</button>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="rolesGrid"></div>
-      <div id="rolesEmpty" class="hidden text-center py-10">
-        <p class="text-3xl mb-2">🙏</p>
-        <p class="cinzel text-sm font-semibold" style="color:#c2710c;">No roles assigned yet</p>
-      </div>
-    </div>
+      {% else %}
+        <div class="text-center py-12">
+          <p class="text-3xl mb-2">🙏</p>
+          <p class="cinzel text-sm font-semibold" style="color:#c2710c;">No roles assigned yet</p>
+          {% if request.args.get('rq') %}
+            <a href="/events/{{ event.event_id }}?tab=roles" style="color:#c2710c; font-size:0.8rem;">Clear search</a>
+          {% endif %}
+        </div>
+      {% endif %}
 
-    <!-- ── PAYMENTS TAB ── -->
-    <div id="panel-payments" class="hidden">
-      <div class="flex flex-wrap items-center gap-3 mb-4">
-        <input type="text" placeholder="Search donor or receipt..."
-          oninput="searchPayments(this.value)" style="width:220px;"/>
-        <select onchange="filterPaymentMode(this.value)" style="width:160px;">
-          <option value="">All Modes</option>
-          <option value="CASH">Cash</option>
-          <option value="UPI">UPI</option>
-          <option value="CHEQUE">Cheque</option>
-          <option value="NEFT">NEFT</option>
-        </select>
+
+    <!-- ══════════════════════════════════
+         TAB: PAYMENTS
+    ══════════════════════════════════ -->
+    {% elif active_tab == 'payments' %}
+
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <form method="GET" action="/events/{{ event.event_id }}" class="flex gap-2 items-center flex-wrap">
+          <input type="hidden" name="tab" value="payments"/>
+          <input type="text" name="pq"
+            value="{{ request.args.get('pq', '') }}"
+            placeholder="Search donor or receipt..."
+            style="width:220px;"/>
+          <select name="payment_mode" style="width:150px;">
+            <option value="">All Modes</option>
+            {% for mode in ['cash', 'upi', 'cheque', 'neft'] %}
+              <option value="{{ mode }}"
+                {% if request.args.get('payment_mode') == mode %}selected{% endif %}>
+                {{ mode | upper }}
+              </option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn-primary cinzel text-xs font-semibold px-3 py-2">FILTER</button>
+          {% if request.args.get('pq') or request.args.get('payment_mode') %}
+            <a href="/events/{{ event.event_id }}?tab=payments"
+              class="btn-outline cinzel text-xs font-semibold">✕ CLEAR</a>
+          {% endif %}
+        </form>
+        <a href="#recordPaymentModal"
+          class="btn-primary cinzel font-semibold tracking-widest"
+          style="text-decoration:none;">💰 RECORD PAYMENT</a>
       </div>
+
       <div class="card overflow-hidden">
-        <table>
-          <thead>
-            <tr>
-              <th>Receipt No</th>
-              <th>Donor</th>
-              <th>Amount</th>
-              <th>Mode</th>
-              <th>Ref</th>
-              <th>Date</th>
-              <th>Recorded By</th>
-            </tr>
-          </thead>
-          <tbody id="paymentsTableBody"></tbody>
-        </table>
-        <div id="paymentsEmpty" class="hidden text-center py-10">
-          <p class="text-3xl mb-2">🪔</p>
-          <p class="cinzel text-sm font-semibold" style="color:#c2710c;">No payments recorded</p>
-        </div>
+        {% if payments %}
+          <table>
+            <thead>
+              <tr>
+                <th>Receipt No</th>
+                <th>Donor</th>
+                <th>Amount</th>
+                <th>Mode</th>
+                <th>Reference</th>
+                <th>Date</th>
+                <th>Recorded By</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for payment in payments %}
+                <tr>
+                  <td class="cinzel text-xs font-semibold" style="color:#c2710c;">
+                    {{ payment.receipt_no or '—' }}
+                  </td>
+                  <td class="font-semibold" style="color:#7a2e00;">{{ payment.donor_name }}</td>
+                  <td class="cinzel font-semibold" style="color:#16a34a;">
+                    {{ payment.amount | format_amount }}
+                  </td>
+                  <td>
+                    <span class="badge badge-cash">{{ payment.payment_mode | upper }}</span>
+                  </td>
+                  <td class="text-xs">{{ payment.reference_number or '—' }}</td>
+                  <td class="text-sm">
+                    {{ payment.payment_date | format_date if payment.payment_date else '—' }}
+                  </td>
+                  <td class="text-sm" style="color:#a07040;">{{ payment.recorded_by or '—' }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+        {% else %}
+          <div class="text-center py-12">
+            <p class="text-3xl mb-2">🪔</p>
+            <p class="cinzel text-sm font-semibold" style="color:#c2710c;">No payments recorded</p>
+          </div>
+        {% endif %}
       </div>
-    </div>
+
+    {% endif %}
 
   </main>
-
-  <!-- ── ADD PLEDGE MODAL ── -->
-  <div class="modal-overlay" id="pledgeModal">
-    <div class="modal">
-      <button onclick="closePledgeModal()" class="absolute top-4 right-5 text-xl font-bold" style="color:#c2710c;">✕</button>
-      <h3 class="cinzel text-xl font-bold mb-1" style="color:#7a2e00;">Add Donor & Pledge</h3>
-      <div class="divider mb-5">STEP 1 — FIND DONOR</div>
-
-      <!-- donor search step -->
-      <div id="pledgeStep1">
-        <div class="flex gap-2 mb-3">
-          <input type="text" id="pledge-search-mobile" placeholder="Search by mobile number..."/>
-          <button onclick="searchDonorForPledge()" class="btn-primary cinzel whitespace-nowrap px-4">SEARCH</button>
-        </div>
-        <div id="pledgeDonorResult" class="hidden card p-4 mb-4">
-          <p class="text-xs font-semibold tracking-wide mb-1" style="color:#a07040;">DONOR FOUND</p>
-          <p class="cinzel font-bold" style="color:#7a2e00;" id="pledgeDonorName">—</p>
-          <p class="text-sm" style="color:#a07040;" id="pledgeDonorInfo">—</p>
-          <button onclick="proceedWithDonor()" class="btn-primary cinzel mt-3 text-xs tracking-widest">USE THIS DONOR →</button>
-        </div>
-        <div id="pledgeDonorNotFound" class="hidden text-center py-4">
-          <p class="text-sm mb-3" style="color:#a07040;">Donor not found. Create a new one?</p>
-          <button onclick="showNewDonorForm()" class="btn-outline cinzel text-xs tracking-widest">+ CREATE DONOR</button>
-        </div>
-      </div>
-
-      <!-- new donor form (hidden) -->
-      <div id="pledgeNewDonorForm" class="hidden">
-        <div class="divider mb-4">NEW DONOR</div>
-        <div class="grid grid-cols-2 gap-3 mb-3">
-          <div>
-            <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">First Name</label>
-            <input type="text" id="nd-first" placeholder="First name"/>
-          </div>
-          <div>
-            <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Last Name</label>
-            <input type="text" id="nd-last" placeholder="Last name"/>
-          </div>
-        </div>
-        <div class="mb-3">
-          <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Mobile</label>
-          <input type="tel" id="nd-mobile" placeholder="Mobile number"/>
-        </div>
-        <div class="mb-3">
-          <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Email</label>
-          <input type="email" id="nd-email" placeholder="Email (optional)"/>
-        </div>
-        <div class="flex items-center gap-2 mb-4">
-          <input type="checkbox" id="nd-anon" class="w-4 h-4 accent-amber-600"/>
-          <label for="nd-anon" class="text-sm" style="color:#7a4a00;">Anonymous Donor</label>
-        </div>
-        <button onclick="proceedWithNewDonor()" class="btn-primary cinzel w-full tracking-widest mb-2">SAVE & CONTINUE →</button>
-      </div>
-
-      <!-- pledge form (hidden) -->
-      <div id="pledgeFormSection" class="hidden">
-        <div class="divider mb-4">PLEDGE DETAILS</div>
-        <div class="card p-3 mb-4" style="border-left:3px solid #c2710c;">
-          <p class="text-xs" style="color:#a07040;">Adding pledge for:</p>
-          <p class="cinzel font-bold" style="color:#7a2e00;" id="pledgeForDonor">—</p>
-        </div>
-        <div class="grid grid-cols-2 gap-3 mb-3">
-          <div>
-            <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Pledge Type</label>
-            <select id="p-type" onchange="togglePledgeFields()">
-              <option value="CASH">Cash</option>
-              <option value="LABH">Labh</option>
-              <option value="IN_KIND">In-Kind</option>
-            </select>
-          </div>
-          <div>
-            <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Category</label>
-            <select id="p-category">
-              <option value="DONATION">Donation</option>
-              <option value="ROLE">Role</option>
-            </select>
-          </div>
-        </div>
-        <div id="cashFields">
-          <div class="mb-3">
-            <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Promised Amount (₹)</label>
-            <input type="number" id="p-amount" placeholder="0.00"/>
-          </div>
-        </div>
-        <div id="inkindFields" class="hidden">
-          <div class="grid grid-cols-2 gap-3 mb-3">
-            <div>
-              <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Item Name</label>
-              <input type="text" id="p-item" placeholder="e.g. Rice, Flowers"/>
-            </div>
-            <div>
-              <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Item Category</label>
-              <input type="text" id="p-itemcat" placeholder="e.g. Food, Decoration"/>
-            </div>
-          </div>
-          <div class="grid grid-cols-3 gap-3 mb-3">
-            <div>
-              <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Quantity</label>
-              <input type="number" id="p-qty" placeholder="0"/>
-            </div>
-            <div>
-              <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Unit</label>
-              <input type="text" id="p-unit" placeholder="kg, pcs"/>
-            </div>
-            <div>
-              <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Market Value (₹)</label>
-              <input type="number" id="p-mktval" placeholder="0.00"/>
-            </div>
-          </div>
-        </div>
-        <div class="mb-3">
-          <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Description</label>
-          <textarea id="p-desc" rows="2" placeholder="Optional notes"></textarea>
-        </div>
-        <div class="flex gap-3 pt-2">
-          <button onclick="submitPledge()" class="btn-primary cinzel font-semibold tracking-widest flex-1">SAVE PLEDGE</button>
-          <button onclick="closePledgeModal()" class="btn-outline cinzel font-semibold flex-1">CANCEL</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── RECORD PAYMENT MODAL ── -->
-  <div class="modal-overlay" id="paymentModal">
-    <div class="modal">
-      <button onclick="closePaymentModal()" class="absolute top-4 right-5 text-xl font-bold" style="color:#c2710c;">✕</button>
-      <h3 class="cinzel text-xl font-bold mb-1" style="color:#7a2e00;">Record Payment</h3>
-      <div class="divider mb-5">PAYMENT DETAILS</div>
-      <form onsubmit="submitPayment(event)" class="space-y-4">
-        <div>
-          <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Select Pledge</label>
-          <select id="pay-pledge">
-            <option value="">— Select a pledge —</option>
-          </select>
-        </div>
-        <div>
-          <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Donor Name</label>
-          <input type="text" id="pay-donor" placeholder="Donor name"/>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Amount (₹)</label>
-            <input type="number" id="pay-amount" placeholder="0.00"/>
-          </div>
-          <div>
-            <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Payment Mode</label>
-            <select id="pay-mode">
-              <option value="CASH">Cash</option>
-              <option value="UPI">UPI</option>
-              <option value="CHEQUE">Cheque</option>
-              <option value="NEFT">NEFT</option>
-            </select>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Receipt No</label>
-            <input type="text" id="pay-receipt" placeholder="RCP-001"/>
-          </div>
-          <div>
-            <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Payment Ref</label>
-            <input type="text" id="pay-ref" placeholder="UPI/Cheque ref"/>
-          </div>
-        </div>
-        <div>
-          <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Payment Date</label>
-          <input type="date" id="pay-date"/>
-        </div>
-        <div>
-          <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Recorded By</label>
-          <input type="text" id="pay-by" placeholder="Staff name"/>
-        </div>
-        <div>
-          <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Description</label>
-          <textarea id="pay-desc" rows="2" placeholder="Optional notes"></textarea>
-        </div>
-        <div class="flex gap-3 pt-2">
-          <button type="submit" class="btn-primary cinzel font-semibold tracking-widest flex-1">RECORD PAYMENT</button>
-          <button type="button" onclick="closePaymentModal()" class="btn-outline cinzel font-semibold flex-1">CANCEL</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ── ASSIGN ROLE MODAL ── -->
-  <div class="modal-overlay" id="roleModal">
-    <div class="modal">
-      <button onclick="closeRoleModal()" class="absolute top-4 right-5 text-xl font-bold" style="color:#c2710c;">✕</button>
-      <h3 class="cinzel text-xl font-bold mb-1" style="color:#7a2e00;">Assign Role</h3>
-      <div class="divider mb-5">ROLE DETAILS</div>
-      <form onsubmit="submitRole(event)" class="space-y-4">
-        <div>
-          <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Role Name</label>
-          <input type="text" id="r-name" placeholder="e.g. Puja Karta, Vaachak"/>
-        </div>
-        <div>
-          <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Donor / Person</label>
-          <input type="text" id="r-donor" placeholder="Search by name or mobile"/>
-        </div>
-        <div>
-          <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Target / Pledge Amount (₹)</label>
-          <input type="number" id="r-amount" placeholder="0.00"/>
-        </div>
-        <div>
-          <label class="text-xs font-semibold block mb-1" style="color:#7a4a00;">Description</label>
-          <textarea id="r-desc" rows="2" placeholder="Role description or notes"></textarea>
-        </div>
-        <div class="flex gap-3 pt-2">
-          <button type="submit" class="btn-primary cinzel font-semibold tracking-widest flex-1">ASSIGN ROLE</button>
-          <button type="button" onclick="closeRoleModal()" class="btn-outline cinzel font-semibold flex-1">CANCEL</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
   <div class="top-strip mt-8"></div>
 
-  <script>
-    // ── mock data ──
-    let pledges = [
-      { pledge_id:1, donor_name:"Mahesh Shah", pledge_type:"CASH", pledge_category:"DONATION", promised_amount:11000, received_amount:5000, status:"PARTIAL" },
-      { pledge_id:2, donor_name:"Neelesh Jain", pledge_type:"LABH", pledge_category:"ROLE", promised_amount:25000, received_amount:25000, status:"COMPLETED" },
-      { pledge_id:3, donor_name:"Anonymous", pledge_type:"IN_KIND", pledge_category:"DONATION", promised_amount:5000, received_amount:0, status:"PENDING" },
-      { pledge_id:4, donor_name:"Priya Kothari", pledge_type:"CASH", pledge_category:"DONATION", promised_amount:8000, received_amount:0, status:"PENDING" }
-    ];
 
-    let roles = [
-      { role_id:1, role_name:"Puja Karta", donor_name:"Mahesh Shah", amount:25000, description:"Main Puja performer" },
-      { role_id:2, role_name:"Vaachak", donor_name:"Neelesh Jain", amount:15000, description:"Scripture reader" },
-      { role_id:3, role_name:"Deravasi", donor_name:"Priya Kothari", amount:10000, description:"Temple resident role" }
-    ];
+  <!-- ══════════════════════════════════════════════
+       EDIT EVENT MODAL
+  ══════════════════════════════════════════════ -->
+  <div id="editEventModal" class="modal-overlay">
+    <div class="modal-box mx-4">
+      <div class="flex items-center justify-between mb-1">
+        <h3 class="cinzel font-bold text-xl" style="color:#7a2e00;">Edit Event</h3>
+        <a href="#" class="text-amber-400 hover:text-amber-700 text-2xl leading-none"
+          style="text-decoration:none;">&times;</a>
+      </div>
+      <div class="divider mb-5">EVENT DETAILS</div>
 
-    let payments = [
-      { payment_id:1, receipt_no:"RCP-001", donor_name:"Mahesh Shah", amount:5000, payment_mode:"CASH", payment_ref:null, payment_date:"2026-06-09", recorded_by:"Admin" }
-    ];
+      <form method="POST" action="/events/{{ event.event_id }}/edit" novalidate class="space-y-4">
 
-    let pledgeSearch='', pledgeStatusFilter='', pledgeTypeFilter='', pledgeCategoryFilter='';
-    let paymentSearch='', paymentModeFilter='';
-    let roleSearch='';
-    let sortField='', sortDir=1;
-    let selectedDonor=null;
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Event Name *</label>
+          <input type="text" name="event_name" value="{{ event.event_name }}" required/>
+        </div>
 
-    // ── tabs ──
-    function switchTab(tab) {
-      ['pledges','roles','payments'].forEach(t => {
-        document.getElementById('tab-'+t).classList.remove('active');
-        document.getElementById('panel-'+t).classList.add('hidden');
-      });
-      document.getElementById('tab-'+tab).classList.add('active');
-      document.getElementById('panel-'+tab).classList.remove('hidden');
-    }
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Category *</label>
+          <select name="category" required>
+            {% for cat in ['Religious','Festival','Infrastructure','Cultural','Charitable','Community','Education','Other'] %}
+              <option value="{{ cat }}"
+                {% if event.category == cat %}selected{% endif %}>
+                {{ cat }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
 
-    // ── pledges table ──
-    function renderPledges() {
-      const tbody = document.getElementById('pledgesTableBody');
-      const empty = document.getElementById('pledgesEmpty');
-      let data = [...pledges];
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Status</label>
+          <select name="status">
+            {% for s in ['active', 'upcoming', 'completed'] %}
+              <option value="{{ s }}"
+                {% if event.status == s %}selected{% endif %}>
+                {{ s | capitalize }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
 
-      if (pledgeSearch) data = data.filter(p => p.donor_name.toLowerCase().includes(pledgeSearch.toLowerCase()));
-      if (pledgeStatusFilter) data = data.filter(p => p.status === pledgeStatusFilter);
-      if (pledgeTypeFilter) data = data.filter(p => p.pledge_type === pledgeTypeFilter);
-      if (pledgeCategoryFilter) data = data.filter(p => p.pledge_category === pledgeCategoryFilter);
-
-      if (sortField) {
-        data.sort((a,b) => {
-          let av = a[sortField], bv = b[sortField];
-          if (typeof av === 'string') av = av.toLowerCase(), bv = bv.toLowerCase();
-          return av > bv ? sortDir : av < bv ? -sortDir : 0;
-        });
-      }
-
-      if (!data.length) { tbody.innerHTML=''; empty.classList.remove('hidden'); return; }
-      empty.classList.add('hidden');
-
-      const statusBadge = s => ({
-        PENDING: '<span class="badge badge-pending">Pending</span>',
-        PARTIAL: '<span class="badge badge-partial">Partial</span>',
-        COMPLETED: '<span class="badge badge-completed">Completed</span>'
-      }[s] || s);
-
-      const typeBadge = t => ({
-        CASH: '<span class="badge badge-cash">Cash</span>',
-        LABH: '<span class="badge" style="background:#fef9c3;color:#854d0e;">Labh</span>',
-        IN_KIND: '<span class="badge" style="background:#e0f2fe;color:#0c4a6e;">In-Kind</span>'
-      }[t] || t);
-
-      tbody.innerHTML = data.map((p,i) => `
-        <tr>
-          <td>
-            <div class="font-semibold" style="color:#7a2e00;">${p.donor_name}</div>
-          </td>
-          <td>${typeBadge(p.pledge_type)}</td>
-          <td>${p.pledge_category === 'ROLE'
-            ? '<span class="badge badge-role">Role</span>'
-            : '<span class="badge badge-cash">Donation</span>'}</td>
-          <td class="cinzel font-semibold" style="color:#7a2e00;">₹${p.promised_amount.toLocaleString('en-IN')}</td>
-          <td class="cinzel font-semibold" style="color:#16a34a;">₹${p.received_amount.toLocaleString('en-IN')}</td>
-          <td>${statusBadge(p.status)}</td>
-          <td>
-            <div class="flex gap-2">
-              <button onclick="recordPaymentForPledge(${p.pledge_id})"
-                class="text-xs py-1 px-2 rounded border border-green-200 text-green-700 hover:bg-green-50">💰 Pay</button>
-              <button onclick="editPledge(${p.pledge_id})"
-                class="btn-outline text-xs py-1 px-2">Edit</button>
-            </div>
-          </td>
-        </tr>
-      `).join('');
-    }
-
-    function searchPledges(q) { pledgeSearch=q; renderPledges(); }
-    function filterPledgeStatus(v) { pledgeStatusFilter=v; renderPledges(); }
-    function filterPledgeType(v) { pledgeTypeFilter=v; renderPledges(); }
-    function filterPledgeCategory(v) { pledgeCategoryFilter=v; renderPledges(); }
-
-    function sortPledges(field) {
-      const fieldMap = { donor:'donor_name', type:'pledge_type', category:'pledge_category',
-        amount:'promised_amount', received:'received_amount', status:'status' };
-      const key = fieldMap[field];
-      if (sortField === key) sortDir *= -1;
-      else { sortField=key; sortDir=1; }
-      document.querySelectorAll('[id^="sort-"]').forEach(el => el.textContent='↕');
-      document.getElementById('sort-'+field).textContent = sortDir===1 ? '↑' : '↓';
-      renderPledges();
-    }
-
-    // ── roles ──
-    function renderRoles() {
-      const grid = document.getElementById('rolesGrid');
-      const empty = document.getElementById('rolesEmpty');
-      let data = roles.filter(r =>
-        !roleSearch ||
-        r.role_name.toLowerCase().includes(roleSearch.toLowerCase()) ||
-        r.donor_name.toLowerCase().includes(roleSearch.toLowerCase())
-      );
-      if (!data.length) { grid.innerHTML=''; empty.classList.remove('hidden'); return; }
-      empty.classList.add('hidden');
-      grid.innerHTML = data.map(r => `
-        <div class="card p-4" style="border-left:4px solid #7c3aed;">
-          <div class="flex items-start justify-between mb-2">
-            <div>
-              <p class="cinzel font-bold text-sm" style="color:#5b21b6;">${r.role_name}</p>
-              <p class="text-sm font-semibold mt-0.5" style="color:#7a2e00;">${r.donor_name}</p>
-            </div>
-            <span class="badge badge-role">Role</span>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Start Date *</label>
+            <input type="date" name="start_date"
+              value="{{ event.start_date | format_date_input }}" required/>
           </div>
-          <p class="text-xs mb-2" style="color:#a07040;">${r.description || '—'}</p>
-          <div class="flex items-center justify-between pt-2 border-t border-amber-100">
-            <span class="cinzel font-bold text-sm" style="color:#c2710c;">₹${r.amount.toLocaleString('en-IN')}</span>
-            <button onclick="editRole(${r.role_id})" class="btn-outline text-xs py-1 px-3">Edit</button>
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">End Date *</label>
+            <input type="date" name="end_date"
+              value="{{ event.end_date | format_date_input }}" required/>
           </div>
         </div>
-      `).join('');
-    }
 
-    function searchRoles(q) { roleSearch=q; renderRoles(); }
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Description</label>
+          <textarea name="description" rows="3"
+            style="resize:none;">{{ event.description or '' }}</textarea>
+        </div>
 
-    // ── payments ──
-    function renderPayments() {
-      const tbody = document.getElementById('paymentsTableBody');
-      const empty = document.getElementById('paymentsEmpty');
-      let data = payments.filter(p => {
-        const q = paymentSearch.toLowerCase();
-        return (!q || p.donor_name.toLowerCase().includes(q) || (p.receipt_no||'').toLowerCase().includes(q))
-          && (!paymentModeFilter || p.payment_mode === paymentModeFilter);
-      });
-      if (!data.length) { tbody.innerHTML=''; empty.classList.remove('hidden'); return; }
-      empty.classList.add('hidden');
-      tbody.innerHTML = data.map(p => `
-        <tr>
-          <td class="cinzel text-xs font-semibold" style="color:#c2710c;">${p.receipt_no || '—'}</td>
-          <td class="font-semibold" style="color:#7a2e00;">${p.donor_name}</td>
-          <td class="cinzel font-semibold" style="color:#16a34a;">₹${p.amount.toLocaleString('en-IN')}</td>
-          <td><span class="badge badge-cash">${p.payment_mode}</span></td>
-          <td class="text-xs">${p.payment_ref || '—'}</td>
-          <td class="text-sm">${p.payment_date}</td>
-          <td class="text-sm" style="color:#a07040;">${p.recorded_by}</td>
-        </tr>
-      `).join('');
-    }
+        <div class="flex gap-3 pt-2">
+          <button type="submit"
+            class="btn-primary cinzel font-semibold tracking-widest flex-1">SAVE CHANGES</button>
+          <a href="#"
+            class="btn-outline cinzel font-semibold flex-1 text-center"
+            style="text-decoration:none;">CANCEL</a>
+        </div>
 
-    function searchPayments(q) { paymentSearch=q; renderPayments(); }
-    function filterPaymentMode(v) { paymentModeFilter=v; renderPayments(); }
+      </form>
+    </div>
+  </div>
 
-    // ── pledge modal ──
-    function openAddPledge() {
-      document.getElementById('pledgeModal').classList.add('open');
-      document.getElementById('pledgeStep1').classList.remove('hidden');
-      document.getElementById('pledgeNewDonorForm').classList.add('hidden');
-      document.getElementById('pledgeFormSection').classList.add('hidden');
-      document.getElementById('pledgeDonorResult').classList.add('hidden');
-      document.getElementById('pledgeDonorNotFound').classList.add('hidden');
-    }
-    function closePledgeModal() { document.getElementById('pledgeModal').classList.remove('open'); }
 
-    function searchDonorForPledge() {
-      const mobile = document.getElementById('pledge-search-mobile').value.trim();
-      // mock search
-      const found = [
-        { donor_id:1, first_name:'Mahesh', last_name:'Shah', mobile:'9988776655', email:'mahesh@example.com' }
-      ].find(d => d.mobile === mobile);
+  <!-- ══════════════════════════════════════════════
+       DELETE EVENT MODAL
+  ══════════════════════════════════════════════ -->
+  <div id="deleteEventModal" class="modal-overlay">
+    <div class="modal-box-danger mx-4">
+      <div class="flex items-center justify-between mb-1">
+        <h3 class="cinzel font-bold text-xl" style="color:#dc2626;">Delete Event</h3>
+        <a href="#" class="text-red-300 hover:text-red-600 text-2xl leading-none"
+          style="text-decoration:none;">&times;</a>
+      </div>
 
-      if (found) {
-        selectedDonor = found;
-        document.getElementById('pledgeDonorName').textContent = found.first_name + ' ' + found.last_name;
-        document.getElementById('pledgeDonorInfo').textContent = found.mobile + ' · ' + (found.email || '—');
-        document.getElementById('pledgeDonorResult').classList.remove('hidden');
-        document.getElementById('pledgeDonorNotFound').classList.add('hidden');
-      } else {
-        document.getElementById('pledgeDonorResult').classList.add('hidden');
-        document.getElementById('pledgeDonorNotFound').classList.remove('hidden');
-      }
-    }
+      <div style="display:flex;align-items:center;gap:8px;margin:16px 0 8px;">
+        <div style="flex:1;height:1px;background:#fca5a5;"></div>
+        <span style="color:#dc2626;font-size:0.75rem;letter-spacing:0.12em;font-family:'Cinzel',serif;">CONFIRM DELETE</span>
+        <div style="flex:1;height:1px;background:#fca5a5;"></div>
+      </div>
 
-    function proceedWithDonor() {
-      document.getElementById('pledgeForDonor').textContent =
-        selectedDonor.first_name + ' ' + selectedDonor.last_name;
-      document.getElementById('pledgeStep1').classList.add('hidden');
-      document.getElementById('pledgeFormSection').classList.remove('hidden');
-    }
+      <div class="mb-5 p-3 rounded text-sm" style="background:#fef2f2; border:1px solid #fca5a5; color:#991b1b;">
+        ⚠ This action is permanent. All pledges, payments, and roles linked to this event will also be deleted.
+      </div>
 
-    function showNewDonorForm() {
-      document.getElementById('pledgeDonorNotFound').classList.add('hidden');
-      document.getElementById('pledgeNewDonorForm').classList.remove('hidden');
-    }
+      <form method="POST" action="/events/{{ event.event_id }}/delete" novalidate class="space-y-4">
 
-    function proceedWithNewDonor() {
-      const first = document.getElementById('nd-first').value;
-      const last = document.getElementById('nd-last').value;
-      selectedDonor = { first_name: first, last_name: last };
-      document.getElementById('pledgeForDonor').textContent = first + ' ' + last;
-      document.getElementById('pledgeNewDonorForm').classList.add('hidden');
-      document.getElementById('pledgeStep1').classList.add('hidden');
-      document.getElementById('pledgeFormSection').classList.remove('hidden');
-    }
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#991b1b;">
+            To confirm, type the event name exactly:
+          </label>
+          <p class="cinzel text-sm font-bold mb-2" style="color:#dc2626;">
+            {{ event.event_name }}
+          </p>
+          <input type="text" name="confirm_name"
+            placeholder="Type event name here..."
+            required/>
+        </div>
 
-    function togglePledgeFields() {
-      const type = document.getElementById('p-type').value;
-      document.getElementById('cashFields').classList.toggle('hidden', type === 'IN_KIND');
-      document.getElementById('inkindFields').classList.toggle('hidden', type !== 'IN_KIND');
-    }
+        <div class="flex gap-3 pt-2">
+          <button type="submit"
+            style="background:linear-gradient(135deg,#ef4444,#dc2626); color:white; border-radius:4px; font-size:0.78rem; letter-spacing:0.08em; padding:8px 18px; border:none; cursor:pointer; flex:1;"
+            class="cinzel font-semibold tracking-widest">
+            DELETE EVENT
+          </button>
+          <a href="#"
+            class="btn-outline cinzel font-semibold flex-1 text-center"
+            style="text-decoration:none;">CANCEL</a>
+        </div>
 
-    function submitPledge() {
-      const type = document.getElementById('p-type').value;
-      const newPledge = {
-        pledge_id: pledges.length + 1,
-        donor_name: selectedDonor.first_name + ' ' + selectedDonor.last_name,
-        pledge_type: type,
-        pledge_category: document.getElementById('p-category').value,
-        promised_amount: parseFloat(document.getElementById('p-amount').value) || 0,
-        received_amount: 0,
-        status: 'PENDING'
-      };
-      pledges.push(newPledge);
-      closePledgeModal();
-      renderPledges();
-    }
+      </form>
+    </div>
+  </div>
 
-    // ── payment modal ──
-    function openRecordPayment() {
-      populatePledgeDropdown();
-      document.getElementById('pay-date').value = new Date().toISOString().split('T')[0];
-      document.getElementById('paymentModal').classList.add('open');
-    }
-    function closePaymentModal() { document.getElementById('paymentModal').classList.remove('open'); }
 
-    function recordPaymentForPledge(pledgeId) {
-      populatePledgeDropdown();
-      document.getElementById('pay-pledge').value = pledgeId;
-      const pledge = pledges.find(p => p.pledge_id === pledgeId);
-      if (pledge) document.getElementById('pay-donor').value = pledge.donor_name;
-      document.getElementById('pay-date').value = new Date().toISOString().split('T')[0];
-      document.getElementById('paymentModal').classList.add('open');
-    }
+  <!-- ══════════════════════════════════════════════
+       ADD CASH / LABH PLEDGE MODAL
+  ══════════════════════════════════════════════ -->
+  <div id="addCashPledgeModal" class="modal-overlay">
+    <div class="modal-box mx-4">
+      <div class="flex items-center justify-between mb-1">
+        <h3 class="cinzel font-bold text-xl" style="color:#7a2e00;">Add Cash / Labh Pledge</h3>
+        <a href="#" class="text-amber-400 hover:text-amber-700 text-2xl leading-none"
+          style="text-decoration:none;">&times;</a>
+      </div>
+      <div class="divider mb-5">PLEDGE DETAILS</div>
 
-    function populatePledgeDropdown() {
-      const sel = document.getElementById('pay-pledge');
-      sel.innerHTML = '<option value="">— Select a pledge —</option>' +
-        pledges.map(p => `<option value="${p.pledge_id}">${p.donor_name} — ₹${p.promised_amount.toLocaleString('en-IN')} (${p.status})</option>`).join('');
-    }
+      <form method="POST" action="/events/{{ event.event_id }}/pledges/create" novalidate class="space-y-4">
+        <input type="hidden" name="pledge_type_group" value="cash"/>
 
-    function submitPayment(e) {
-      e.preventDefault();
-      const amount = parseFloat(document.getElementById('pay-amount').value) || 0;
-      const pledgeId = parseInt(document.getElementById('pay-pledge').value);
-      payments.push({
-        payment_id: payments.length + 1,
-        receipt_no: document.getElementById('pay-receipt').value,
-        donor_name: document.getElementById('pay-donor').value,
-        amount, payment_mode: document.getElementById('pay-mode').value,
-        payment_ref: document.getElementById('pay-ref').value,
-        payment_date: document.getElementById('pay-date').value,
-        recorded_by: document.getElementById('pay-by').value
-      });
-      // update pledge received amount
-      const pledge = pledges.find(p => p.pledge_id === pledgeId);
-      if (pledge) {
-        pledge.received_amount += amount;
-        if (pledge.received_amount >= pledge.promised_amount) pledge.status = 'COMPLETED';
-        else if (pledge.received_amount > 0) pledge.status = 'PARTIAL';
-      }
-      closePaymentModal();
-      renderPledges();
-      renderPayments();
-      switchTab('payments');
-    }
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Donor *</label>
+          <select name="donor_id" required>
+            <option value="">— Select Donor —</option>
+            {% for donor in donors %}
+              <option value="{{ donor.donor_id }}">
+                {{ donor.first_name }} {{ donor.last_name }}
+                {% if donor.mobile %} — {{ donor.mobile }}{% endif %}
+              </option>
+            {% endfor %}
+          </select>
+          <p class="text-xs mt-1" style="color:#a07040;">
+            Donor not listed?
+            <a href="/donors?tab=donors#addDonorModal" style="color:#c2710c;">Add donor first</a>
+          </p>
+        </div>
 
-    // ── role modal ──
-    function openAddRole() { document.getElementById('roleModal').classList.add('open'); }
-    function closeRoleModal() { document.getElementById('roleModal').classList.remove('open'); }
-    function submitRole(e) {
-      e.preventDefault();
-      roles.push({
-        role_id: roles.length + 1,
-        role_name: document.getElementById('r-name').value,
-        donor_name: document.getElementById('r-donor').value,
-        amount: parseFloat(document.getElementById('r-amount').value) || 0,
-        description: document.getElementById('r-desc').value
-      });
-      closeRoleModal();
-      renderRoles();
-    }
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Pledge Type *</label>
+          <select name="pledge_type" required>
+            <option value="cash">Cash</option>
+            <option value="labh">Labh</option>
+          </select>
+        </div>
 
-    function editPledge(id) { alert('Edit pledge ' + id + ' — wire to PUT /pledges/' + id); }
-    function editRole(id) { alert('Edit role ' + id); }
-    function toggleEditEvent() {
-      document.getElementById('editEventForm').classList.toggle('hidden');
-      document.getElementById('eventDatesDisplay').classList.toggle('hidden');
-      document.getElementById('saveEventBtn').classList.toggle('hidden');
-    }
-    function saveEventChanges() {
-      document.getElementById('eventNameDisplay').textContent = document.getElementById('edit-name').value;
-      document.getElementById('eventCategory').textContent = document.getElementById('edit-category').value;
-      document.getElementById('eventDescDisplay').textContent = document.getElementById('edit-desc').value;
-      toggleEditEvent();
-      // wire to PUT /events/{id}
-    }
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Category</label>
+          <select name="pledge_category">
+            <option value="donation">Donation</option>
+            <option value="role">Role</option>
+          </select>
+        </div>
 
-    function logout() { window.location.href = '/login'; }
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Promised Amount (₹) *</label>
+          <input type="number" name="promised_amount" placeholder="0" min="0" step="100" required/>
+        </div>
 
-    // init
-    renderPledges();
-    renderRoles();
-    renderPayments();
-  </script>
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Description</label>
+          <textarea name="description" rows="2"
+            placeholder="Optional notes" style="resize:none;"></textarea>
+        </div>
+
+        {% if pledge_form_error %}
+          <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+            {{ pledge_form_error }}
+          </p>
+        {% endif %}
+
+        <div class="flex gap-3 pt-2">
+          <button type="submit"
+            class="btn-primary cinzel font-semibold tracking-widest flex-1">SAVE PLEDGE</button>
+          <a href="#"
+            class="btn-outline cinzel font-semibold flex-1 text-center"
+            style="text-decoration:none;">CANCEL</a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════
+       ADD IN-KIND PLEDGE MODAL
+  ══════════════════════════════════════════════ -->
+  <div id="addInKindPledgeModal" class="modal-overlay">
+    <div class="modal-box mx-4">
+      <div class="flex items-center justify-between mb-1">
+        <h3 class="cinzel font-bold text-xl" style="color:#7a2e00;">Add In-Kind Pledge</h3>
+        <a href="#" class="text-amber-400 hover:text-amber-700 text-2xl leading-none"
+          style="text-decoration:none;">&times;</a>
+      </div>
+      <div class="divider mb-5">IN-KIND DETAILS</div>
+
+      <form method="POST" action="/events/{{ event.event_id }}/pledges/create" novalidate class="space-y-4">
+        <input type="hidden" name="pledge_type_group" value="in_kind"/>
+        <input type="hidden" name="pledge_type" value="in_kind"/>
+
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Donor *</label>
+          <select name="donor_id" required>
+            <option value="">— Select Donor —</option>
+            {% for donor in donors %}
+              <option value="{{ donor.donor_id }}">
+                {{ donor.first_name }} {{ donor.last_name }}
+                {% if donor.mobile %} — {{ donor.mobile }}{% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Category</label>
+          <select name="pledge_category">
+            <option value="donation">Donation</option>
+            <option value="role">Role</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Item Name *</label>
+            <input type="text" name="item_name"
+              placeholder="e.g. Rice, Flowers" required/>
+          </div>
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Item Category</label>
+            <input type="text" name="item_category"
+              placeholder="e.g. Food, Decoration"/>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Quantity *</label>
+            <input type="number" name="quantity" placeholder="0" min="0" required/>
+          </div>
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Unit</label>
+            <input type="text" name="unit" placeholder="kg, pcs, L"/>
+          </div>
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Market Value (₹)</label>
+            <input type="number" name="market_value" placeholder="0" min="0"/>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Description</label>
+          <textarea name="description" rows="2"
+            placeholder="Optional notes" style="resize:none;"></textarea>
+        </div>
+
+        {% if inkind_form_error %}
+          <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+            {{ inkind_form_error }}
+          </p>
+        {% endif %}
+
+        <div class="flex gap-3 pt-2">
+          <button type="submit"
+            class="btn-primary cinzel font-semibold tracking-widest flex-1">SAVE PLEDGE</button>
+          <a href="#"
+            class="btn-outline cinzel font-semibold flex-1 text-center"
+            style="text-decoration:none;">CANCEL</a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════
+       RECORD PAYMENT MODAL
+  ══════════════════════════════════════════════ -->
+  <div id="recordPaymentModal" class="modal-overlay">
+    <div class="modal-box mx-4">
+      <div class="flex items-center justify-between mb-1">
+        <h3 class="cinzel font-bold text-xl" style="color:#7a2e00;">Record Payment</h3>
+        <a href="#" class="text-amber-400 hover:text-amber-700 text-2xl leading-none"
+          style="text-decoration:none;">&times;</a>
+      </div>
+      <div class="divider mb-5">PAYMENT DETAILS</div>
+
+      <form method="POST" action="/events/{{ event.event_id }}/payments/create" novalidate class="space-y-4">
+
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Select Pledge *</label>
+          <select name="pledge_id" required>
+            <option value="">— Select a pledge —</option>
+            {% for pledge in pledges %}
+              <option value="{{ pledge.pledge_id }}">
+                {{ pledge.donor_name }} — {{ pledge.promised_amount | format_amount }}
+                ({{ pledge.status | capitalize }})
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Amount (₹) *</label>
+            <input type="number" name="amount" placeholder="0" min="1" step="1" required/>
+          </div>
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Payment Mode *</label>
+            <select name="payment_mode" required>
+              <option value="cash">Cash</option>
+              <option value="upi">UPI</option>
+              <option value="cheque">Cheque</option>
+              <option value="neft">NEFT</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Receipt No</label>
+            <input type="text" name="receipt_no" placeholder="RCP-001"/>
+          </div>
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Reference No</label>
+            <input type="text" name="reference_number" placeholder="UPI / Cheque ref"/>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Payment Date</label>
+          <input type="date" name="payment_date"/>
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Recorded By</label>
+          <input type="text" name="recorded_by" placeholder="Staff name"/>
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Description</label>
+          <textarea name="description" rows="2"
+            placeholder="Optional notes" style="resize:none;"></textarea>
+        </div>
+
+        {% if payment_form_error %}
+          <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+            {{ payment_form_error }}
+          </p>
+        {% endif %}
+
+        <div class="flex gap-3 pt-2">
+          <button type="submit"
+            class="btn-primary cinzel font-semibold tracking-widest flex-1">RECORD PAYMENT</button>
+          <a href="#"
+            class="btn-outline cinzel font-semibold flex-1 text-center"
+            style="text-decoration:none;">CANCEL</a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════
+       ASSIGN ROLE MODAL
+  ══════════════════════════════════════════════ -->
+  <div id="assignRoleModal" class="modal-overlay">
+    <div class="modal-box mx-4">
+      <div class="flex items-center justify-between mb-1">
+        <h3 class="cinzel font-bold text-xl" style="color:#7a2e00;">Assign Role</h3>
+        <a href="#" class="text-amber-400 hover:text-amber-700 text-2xl leading-none"
+          style="text-decoration:none;">&times;</a>
+      </div>
+      <div class="divider mb-5">ROLE DETAILS</div>
+
+      <form method="POST" action="/events/{{ event.event_id }}/roles/create" novalidate class="space-y-4">
+
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Role Name *</label>
+          <input type="text" name="role_name"
+            placeholder="e.g. Puja Karta, Vaachak" required/>
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Assign To (Donor) *</label>
+          <select name="donor_id" required>
+            <option value="">— Select Donor —</option>
+            {% for donor in donors %}
+              <option value="{{ donor.donor_id }}">
+                {{ donor.first_name }} {{ donor.last_name }}
+                {% if donor.mobile %} — {{ donor.mobile }}{% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Target Amount (₹)</label>
+          <input type="number" name="target_amount" placeholder="0" min="0" step="100"/>
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Description</label>
+          <textarea name="description" rows="2"
+            placeholder="Role description or notes" style="resize:none;"></textarea>
+        </div>
+
+        {% if role_form_error %}
+          <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+            {{ role_form_error }}
+          </p>
+        {% endif %}
+
+        <div class="flex gap-3 pt-2">
+          <button type="submit"
+            class="btn-primary cinzel font-semibold tracking-widest flex-1">ASSIGN ROLE</button>
+          <a href="#"
+            class="btn-outline cinzel font-semibold flex-1 text-center"
+            style="text-decoration:none;">CANCEL</a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
 
 </body>
 </html>
