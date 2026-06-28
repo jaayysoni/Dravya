@@ -60,27 +60,23 @@
     td { padding: 11px 14px; border-bottom: 1px solid #fef3e2; font-size: 0.9rem; color: #4a3000; }
     tr:hover td { background: #fffbf5; }
     .badge { font-size: 0.68rem; padding: 2px 9px; border-radius: 9999px; font-weight: 600; letter-spacing: 0.04em; }
-    .badge-pending  { background: #fef3c7; color: #92400e; }
-    .badge-partial  { background: #dbeafe; color: #1e40af; }
-    .badge-completed{ background: #d1fae5; color: #065f46; }
-    .badge-cash     { background: #f3f4f6; color: #374151; }
-    .badge-labh     { background: #fef9c3; color: #854d0e; }
-    .badge-inkind   { background: #e0f2fe; color: #0c4a6e; }
-    .badge-role     { background: #ede9fe; color: #5b21b6; }
-    .badge-active   { background: #fef3c7; color: #92400e; }
-    .badge-upcoming { background: #dbeafe; color: #1e40af; }
-    .badge-done     { background: #d1fae5; color: #065f46; }
+    .badge-pending   { background: #fef3c7; color: #92400e; }
+    .badge-partial   { background: #dbeafe; color: #1e40af; }
+    .badge-completed { background: #d1fae5; color: #065f46; }
+    .badge-cash      { background: #f3f4f6; color: #374151; }
+    .badge-labh      { background: #fef9c3; color: #854d0e; }
+    .badge-inkind    { background: #e0f2fe; color: #0c4a6e; }
+    .badge-role      { background: #ede9fe; color: #5b21b6; }
+    .badge-active    { background: #fef3c7; color: #92400e; }
+    .badge-upcoming  { background: #dbeafe; color: #1e40af; }
+    .badge-done      { background: #d1fae5; color: #065f46; }
     .divider {
       display: flex; align-items: center; gap: 8px;
       color: #c2710c; font-size: 0.75rem; letter-spacing: 0.12em;
     }
     .divider::before, .divider::after { content:''; flex:1; height:1px; background:#e89a3c; }
-    input[type="text"],
-    input[type="number"],
-    input[type="date"],
-    input[type="tel"],
-    input[type="email"],
-    select, textarea {
+    input[type="text"], input[type="number"], input[type="date"],
+    input[type="tel"], input[type="email"], select, textarea {
       border: 1px solid #f0d9b5; border-radius: 4px;
       padding: 8px 12px; font-size: 0.9rem;
       background: #fffbf5; color: #4a3000;
@@ -100,10 +96,8 @@
     }
     .tab-link:hover { color: #c2710c; }
     .tab-link.active-tab { color: #c2710c; border-bottom-color: #c2710c; }
-    .progress-bar-bg { background: #fde9c9; border-radius: 9999px; height: 10px; }
+    .progress-bar-bg  { background: #fde9c9; border-radius: 9999px; height: 10px; }
     .progress-bar-fill { background: linear-gradient(90deg,#e07b12,#c2710c); border-radius: 9999px; height: 10px; }
-
-    /* modal */
     .modal-overlay {
       display: none; position: fixed; inset: 0;
       background: rgba(0,0,0,0.5); z-index: 50;
@@ -140,16 +134,16 @@
     </div>
     <div class="flex items-center gap-6">
       <a href="/dashboard" class="nav-link cinzel">Dashboard</a>
-      <a href="/donors" class="nav-link cinzel">Donors &amp; Families</a>
-      <a href="/reports" class="nav-link cinzel">Reports</a>
+      <a href="/donors"    class="nav-link cinzel">Donors &amp; Families</a>
+      <a href="/reports"   class="nav-link cinzel">Reports</a>
     </div>
     <div class="flex items-center gap-3">
       <a href="#addCashPledgeModal"
-        class="btn-primary cinzel font-semibold tracking-widest"
-        style="text-decoration:none;">+ ADD PLEDGE</a>
+         class="btn-primary cinzel font-semibold tracking-widest"
+         style="text-decoration:none;">+ ADD PLEDGE</a>
       <a href="#recordPaymentModal"
-        class="btn-outline cinzel font-semibold tracking-widest"
-        style="text-decoration:none;">💰 PAYMENT</a>
+         class="btn-outline cinzel font-semibold tracking-widest"
+         style="text-decoration:none;">💰 PAYMENT</a>
       <div class="w-px h-6 bg-amber-400 opacity-40"></div>
       <a href="/logout" class="nav-link cinzel text-xs" style="text-decoration:none;">LOGOUT</a>
     </div>
@@ -157,30 +151,29 @@
 
   <main class="max-w-7xl mx-auto px-6 py-8">
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="mb-4 px-4 py-3 rounded text-sm font-semibold
-            {% if category == 'error' %}bg-red-50 border border-red-200 text-red-700
-            {% else %}bg-green-50 border border-green-200 text-green-700{% endif %}">
-            {{ message }}
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
+    {# ── Flash messages (passed from route, no Flask dependency) ── #}
+    {% if flash_error %}
+      <div class="mb-4 px-4 py-3 rounded text-sm font-semibold bg-red-50 border border-red-200 text-red-700">
+        {{ flash_error }}
+      </div>
+    {% endif %}
+    {% if flash_success %}
+      <div class="mb-4 px-4 py-3 rounded text-sm font-semibold bg-green-50 border border-green-200 text-green-700">
+        {{ flash_success }}
+      </div>
+    {% endif %}
 
-    <!-- breadcrumb -->
+    {# ── Breadcrumb ── #}
     <div class="flex items-center gap-2 text-xs mb-5" style="color:#a07040;">
       <a href="/dashboard" class="hover:underline" style="color:#c2710c;">Dashboard</a>
       <span>›</span>
       <span style="color:#7a2e00; font-weight:600;">{{ event.event_name }}</span>
     </div>
 
-    <!-- EVENT HEADER -->
+    {# ── Event header ── #}
     <div class="card p-6 mb-6">
       <div class="flex items-start justify-between gap-4">
         <div class="flex-1">
-
           <div class="flex items-center gap-3 mb-2">
             {% if event.status == 'active' %}
               <span class="badge badge-active">Active</span>
@@ -191,9 +184,7 @@
             {% endif %}
             <span class="text-xs tracking-widest" style="color:#a07040;">{{ event.category or '—' }}</span>
           </div>
-
           <h2 class="cinzel text-2xl font-bold mb-1" style="color:#7a2e00;">{{ event.event_name }}</h2>
-
           <div class="flex items-center gap-4 mt-2 flex-wrap">
             <span class="text-sm" style="color:#a07040;">
               📅 {{ event.start_date | format_date }} — {{ event.end_date | format_date }}
@@ -202,36 +193,29 @@
               <span class="text-sm" style="color:#a07040;">{{ event.description }}</span>
             {% endif %}
           </div>
-
         </div>
-
-        <!-- action buttons -->
         <div class="flex items-center gap-2 flex-shrink-0">
           {% if current_user.role == 'admin' %}
             <a href="#editEventModal"
-              class="btn-outline cinzel text-xs font-semibold tracking-widest"
-              style="text-decoration:none;">✎ EDIT</a>
+               class="btn-outline cinzel text-xs font-semibold tracking-widest"
+               style="text-decoration:none;">✎ EDIT</a>
             <a href="#deleteEventModal"
-              class="btn-danger cinzel text-xs font-semibold tracking-widest"
-              style="text-decoration:none;">🗑 DELETE</a>
+               class="btn-danger cinzel text-xs font-semibold tracking-widest"
+               style="text-decoration:none;">🗑 DELETE</a>
           {% endif %}
         </div>
       </div>
     </div>
 
-    <!-- STAT CARDS -->
+    {# ── Stat cards ── #}
     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
       <div class="stat-card">
         <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Pledged</p>
-        <p class="cinzel text-xl font-bold" style="color:#c2710c;">
-          {{ event.total_pledged | format_amount }}
-        </p>
+        <p class="cinzel text-xl font-bold" style="color:#c2710c;">{{ event.total_pledged | format_amount }}</p>
       </div>
       <div class="stat-card">
         <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Received</p>
-        <p class="cinzel text-xl font-bold" style="color:#16a34a;">
-          {{ event.total_received | format_amount }}
-        </p>
+        <p class="cinzel text-xl font-bold" style="color:#16a34a;">{{ event.total_received | format_amount }}</p>
       </div>
       <div class="stat-card">
         <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Pending</p>
@@ -241,9 +225,7 @@
       </div>
       <div class="stat-card">
         <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Expenses</p>
-        <p class="cinzel text-xl font-bold" style="color:#7c3aed;">
-          {{ event.total_expenses | format_amount }}
-        </p>
+        <p class="cinzel text-xl font-bold" style="color:#7c3aed;">{{ event.total_expenses | format_amount }}</p>
       </div>
       <div class="stat-card">
         <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Total Donors</p>
@@ -259,7 +241,7 @@
       </div>
     </div>
 
-    <!-- COLLECTION PROGRESS -->
+    {# ── Progress bar ── #}
     {% set pct = ((event.total_received / event.total_pledged * 100) | round | int) if event.total_pledged > 0 else 0 %}
     {% set pct = [pct, 100] | min %}
     <div class="card p-5 mb-6">
@@ -276,42 +258,37 @@
       </div>
     </div>
 
-    <!-- TABS -->
-    {% set active_tab = request.args.get('tab', 'pledges') %}
+    {# ── Tabs — active_tab comes from route, not request.args ── #}
     <div class="border-b border-amber-200 mb-5 flex">
       <a href="/events/{{ event.event_id }}?tab=pledges"
-        class="tab-link cinzel {% if active_tab == 'pledges' %}active-tab{% endif %}">
+         class="tab-link cinzel {% if active_tab == 'pledges' %}active-tab{% endif %}">
         DONORS &amp; PLEDGES
       </a>
       <a href="/events/{{ event.event_id }}?tab=roles"
-        class="tab-link cinzel {% if active_tab == 'roles' %}active-tab{% endif %}">
+         class="tab-link cinzel {% if active_tab == 'roles' %}active-tab{% endif %}">
         ROLE PLAYERS
       </a>
       <a href="/events/{{ event.event_id }}?tab=payments"
-        class="tab-link cinzel {% if active_tab == 'payments' %}active-tab{% endif %}">
+         class="tab-link cinzel {% if active_tab == 'payments' %}active-tab{% endif %}">
         PAYMENTS
       </a>
     </div>
 
 
-    <!-- ══════════════════════════════════
-         TAB: DONORS & PLEDGES
-    ══════════════════════════════════ -->
+    {# ════════════════════════════════════
+       TAB: DONORS & PLEDGES
+    ════════════════════════════════════ #}
     {% if active_tab == 'pledges' %}
 
       <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-
         <form method="GET" action="/events/{{ event.event_id }}" class="flex flex-wrap gap-2 items-center">
           <input type="hidden" name="tab" value="pledges"/>
-          <input type="text" name="q"
-            value="{{ request.args.get('q', '') }}"
-            placeholder="Search donor name..."
-            style="width:200px;"/>
+          <input type="text" name="q" value="{{ q or '' }}"
+                 placeholder="Search donor name..." style="width:200px;"/>
           <select name="status" style="width:140px;">
             <option value="">All Status</option>
             {% for s in ['pending', 'partial', 'completed'] %}
-              <option value="{{ s }}"
-                {% if request.args.get('status') == s %}selected{% endif %}>
+              <option value="{{ s }}" {% if status == s %}selected{% endif %}>
                 {{ s | capitalize }}
               </option>
             {% endfor %}
@@ -319,26 +296,24 @@
           <select name="pledge_type" style="width:140px;">
             <option value="">All Types</option>
             {% for t in ['cash', 'labh', 'in_kind'] %}
-              <option value="{{ t }}"
-                {% if request.args.get('pledge_type') == t %}selected{% endif %}>
+              <option value="{{ t }}" {% if pledge_type == t %}selected{% endif %}>
                 {{ t | replace('_', ' ') | capitalize }}
               </option>
             {% endfor %}
           </select>
           <button type="submit" class="btn-primary cinzel text-xs font-semibold px-3 py-2">FILTER</button>
-          {% if request.args.get('q') or request.args.get('status') or request.args.get('pledge_type') %}
+          {% if q or status or pledge_type %}
             <a href="/events/{{ event.event_id }}?tab=pledges"
-              class="btn-outline cinzel text-xs font-semibold">✕ CLEAR</a>
+               class="btn-outline cinzel text-xs font-semibold">✕ CLEAR</a>
           {% endif %}
         </form>
-
         <div class="flex gap-2">
           <a href="#addCashPledgeModal"
-            class="btn-primary cinzel text-xs font-semibold tracking-widest"
-            style="text-decoration:none;">+ CASH PLEDGE</a>
+             class="btn-primary cinzel text-xs font-semibold tracking-widest"
+             style="text-decoration:none;">+ CASH PLEDGE</a>
           <a href="#addInKindPledgeModal"
-            class="btn-outline cinzel text-xs font-semibold tracking-widest"
-            style="text-decoration:none;">+ IN-KIND PLEDGE</a>
+             class="btn-outline cinzel text-xs font-semibold tracking-widest"
+             style="text-decoration:none;">+ IN-KIND PLEDGE</a>
         </div>
       </div>
 
@@ -361,9 +336,7 @@
               {% for pledge in pledges %}
                 <tr>
                   <td>
-                    <div class="font-semibold" style="color:#7a2e00;">
-                      {{ pledge.donor_name }}
-                    </div>
+                    <div class="font-semibold" style="color:#7a2e00;">{{ pledge.donor_name }}</div>
                     <div class="text-xs" style="color:#a07040;">#{{ pledge.pledge_id }}</div>
                   </td>
                   <td>
@@ -405,12 +378,12 @@
                   <td>
                     <div class="flex gap-2">
                       <a href="#recordPaymentModal"
-                        class="text-xs py-1 px-2 rounded border border-green-200 text-green-700 hover:bg-green-50"
-                        style="text-decoration:none;">💰 Pay</a>
+                         class="text-xs py-1 px-2 rounded border border-green-200 text-green-700 hover:bg-green-50"
+                         style="text-decoration:none;">💰 Pay</a>
                       {% if current_user.role == 'admin' %}
                         <a href="/events/{{ event.event_id }}/pledges/{{ pledge.pledge_id }}/edit"
-                          class="btn-outline text-xs py-1 px-2"
-                          style="text-decoration:none;">Edit</a>
+                           class="btn-outline text-xs py-1 px-2"
+                           style="text-decoration:none;">Edit</a>
                       {% endif %}
                     </div>
                   </td>
@@ -418,12 +391,11 @@
               {% endfor %}
             </tbody>
           </table>
-
         {% else %}
           <div class="text-center py-12">
             <p class="text-3xl mb-2">🪔</p>
             <p class="cinzel text-sm font-semibold" style="color:#c2710c;">No pledges found</p>
-            {% if request.args.get('q') or request.args.get('status') or request.args.get('pledge_type') %}
+            {% if q or status or pledge_type %}
               <p class="text-xs mt-1" style="color:#a07040;">
                 <a href="/events/{{ event.event_id }}?tab=pledges" style="color:#c2710c;">Clear filters</a>
               </p>
@@ -433,27 +405,25 @@
       </div>
 
 
-    <!-- ══════════════════════════════════
-         TAB: ROLE PLAYERS
-    ══════════════════════════════════ -->
+    {# ════════════════════════════════════
+       TAB: ROLE PLAYERS
+    ════════════════════════════════════ #}
     {% elif active_tab == 'roles' %}
 
       <div class="flex items-center justify-between gap-3 mb-4">
         <form method="GET" action="/events/{{ event.event_id }}" class="flex gap-2 items-center">
           <input type="hidden" name="tab" value="roles"/>
-          <input type="text" name="rq"
-            value="{{ request.args.get('rq', '') }}"
-            placeholder="Search role or donor..."
-            style="width:260px;"/>
+          <input type="text" name="rq" value="{{ rq or '' }}"
+                 placeholder="Search role or donor..." style="width:260px;"/>
           <button type="submit" class="btn-primary cinzel text-xs font-semibold px-3 py-2">SEARCH</button>
-          {% if request.args.get('rq') %}
+          {% if rq %}
             <a href="/events/{{ event.event_id }}?tab=roles"
-              class="btn-outline cinzel text-xs font-semibold">✕ CLEAR</a>
+               class="btn-outline cinzel text-xs font-semibold">✕ CLEAR</a>
           {% endif %}
         </form>
         <a href="#assignRoleModal"
-          class="btn-primary cinzel font-semibold tracking-widest"
-          style="text-decoration:none;">+ ASSIGN ROLE</a>
+           class="btn-primary cinzel font-semibold tracking-widest"
+           style="text-decoration:none;">+ ASSIGN ROLE</a>
       </div>
 
       {% if roles %}
@@ -469,7 +439,7 @@
                   <span class="badge badge-role">Role</span>
                   {% if current_user.role == 'admin' %}
                     <a href="/events/{{ event.event_id }}/roles/{{ role.role_id }}/edit"
-                      class="text-xs" style="color:#c2710c; text-decoration:none;">✎</a>
+                       class="text-xs" style="color:#c2710c; text-decoration:none;">✎</a>
                   {% endif %}
                 </div>
               </div>
@@ -489,48 +459,45 @@
             </div>
           {% endfor %}
         </div>
-
       {% else %}
         <div class="text-center py-12">
           <p class="text-3xl mb-2">🙏</p>
           <p class="cinzel text-sm font-semibold" style="color:#c2710c;">No roles assigned yet</p>
-          {% if request.args.get('rq') %}
-            <a href="/events/{{ event.event_id }}?tab=roles" style="color:#c2710c; font-size:0.8rem;">Clear search</a>
+          {% if rq %}
+            <a href="/events/{{ event.event_id }}?tab=roles"
+               style="color:#c2710c; font-size:0.8rem;">Clear search</a>
           {% endif %}
         </div>
       {% endif %}
 
 
-    <!-- ══════════════════════════════════
-         TAB: PAYMENTS
-    ══════════════════════════════════ -->
+    {# ════════════════════════════════════
+       TAB: PAYMENTS
+    ════════════════════════════════════ #}
     {% elif active_tab == 'payments' %}
 
       <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
         <form method="GET" action="/events/{{ event.event_id }}" class="flex gap-2 items-center flex-wrap">
           <input type="hidden" name="tab" value="payments"/>
-          <input type="text" name="pq"
-            value="{{ request.args.get('pq', '') }}"
-            placeholder="Search donor or receipt..."
-            style="width:220px;"/>
+          <input type="text" name="pq" value="{{ pq or '' }}"
+                 placeholder="Search donor or receipt..." style="width:220px;"/>
           <select name="payment_mode" style="width:150px;">
             <option value="">All Modes</option>
             {% for mode in ['cash', 'upi', 'cheque', 'neft'] %}
-              <option value="{{ mode }}"
-                {% if request.args.get('payment_mode') == mode %}selected{% endif %}>
+              <option value="{{ mode }}" {% if payment_mode == mode %}selected{% endif %}>
                 {{ mode | upper }}
               </option>
             {% endfor %}
           </select>
           <button type="submit" class="btn-primary cinzel text-xs font-semibold px-3 py-2">FILTER</button>
-          {% if request.args.get('pq') or request.args.get('payment_mode') %}
+          {% if pq or payment_mode %}
             <a href="/events/{{ event.event_id }}?tab=payments"
-              class="btn-outline cinzel text-xs font-semibold">✕ CLEAR</a>
+               class="btn-outline cinzel text-xs font-semibold">✕ CLEAR</a>
           {% endif %}
         </form>
         <a href="#recordPaymentModal"
-          class="btn-primary cinzel font-semibold tracking-widest"
-          style="text-decoration:none;">💰 RECORD PAYMENT</a>
+           class="btn-primary cinzel font-semibold tracking-widest"
+           style="text-decoration:none;">💰 RECORD PAYMENT</a>
       </div>
 
       <div class="card overflow-hidden">
@@ -569,7 +536,6 @@
               {% endfor %}
             </tbody>
           </table>
-
         {% else %}
           <div class="text-center py-12">
             <p class="text-3xl mb-2">🪔</p>
@@ -584,147 +550,111 @@
   <div class="top-strip mt-8"></div>
 
 
-  <!-- ══════════════════════════════════════════════
-       EDIT EVENT MODAL
-  ══════════════════════════════════════════════ -->
+  {# ══════════════════════════════════════════════
+     EDIT EVENT MODAL
+  ══════════════════════════════════════════════ #}
   <div id="editEventModal" class="modal-overlay">
     <div class="modal-box mx-4">
       <div class="flex items-center justify-between mb-1">
         <h3 class="cinzel font-bold text-xl" style="color:#7a2e00;">Edit Event</h3>
         <a href="#" class="text-amber-400 hover:text-amber-700 text-2xl leading-none"
-          style="text-decoration:none;">&times;</a>
+           style="text-decoration:none;">&times;</a>
       </div>
       <div class="divider mb-5">EVENT DETAILS</div>
-
       <form method="POST" action="/events/{{ event.event_id }}/edit" novalidate class="space-y-4">
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Event Name *</label>
           <input type="text" name="event_name" value="{{ event.event_name }}" required/>
         </div>
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Category *</label>
           <select name="category" required>
             {% for cat in ['Religious','Festival','Infrastructure','Cultural','Charitable','Community','Education','Other'] %}
-              <option value="{{ cat }}"
-                {% if event.category == cat %}selected{% endif %}>
-                {{ cat }}
-              </option>
+              <option value="{{ cat }}" {% if event.category == cat %}selected{% endif %}>{{ cat }}</option>
             {% endfor %}
           </select>
         </div>
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Status</label>
           <select name="status">
             {% for s in ['active', 'upcoming', 'completed'] %}
-              <option value="{{ s }}"
-                {% if event.status == s %}selected{% endif %}>
-                {{ s | capitalize }}
-              </option>
+              <option value="{{ s }}" {% if event.status == s %}selected{% endif %}>{{ s | capitalize }}</option>
             {% endfor %}
           </select>
         </div>
-
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Start Date *</label>
-            <input type="date" name="start_date"
-              value="{{ event.start_date | format_date_input }}" required/>
+            <input type="date" name="start_date" value="{{ event.start_date | format_date_input }}" required/>
           </div>
           <div>
             <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">End Date *</label>
-            <input type="date" name="end_date"
-              value="{{ event.end_date | format_date_input }}" required/>
+            <input type="date" name="end_date" value="{{ event.end_date | format_date_input }}" required/>
           </div>
         </div>
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Description</label>
-          <textarea name="description" rows="3"
-            style="resize:none;">{{ event.description or '' }}</textarea>
+          <textarea name="description" rows="3" style="resize:none;">{{ event.description or '' }}</textarea>
         </div>
-
         <div class="flex gap-3 pt-2">
-          <button type="submit"
-            class="btn-primary cinzel font-semibold tracking-widest flex-1">SAVE CHANGES</button>
-          <a href="#"
-            class="btn-outline cinzel font-semibold flex-1 text-center"
-            style="text-decoration:none;">CANCEL</a>
+          <button type="submit" class="btn-primary cinzel font-semibold tracking-widest flex-1">SAVE CHANGES</button>
+          <a href="#" class="btn-outline cinzel font-semibold flex-1 text-center" style="text-decoration:none;">CANCEL</a>
         </div>
-
       </form>
     </div>
   </div>
 
 
-  <!-- ══════════════════════════════════════════════
-       DELETE EVENT MODAL
-  ══════════════════════════════════════════════ -->
+  {# ══════════════════════════════════════════════
+     DELETE EVENT MODAL
+  ══════════════════════════════════════════════ #}
   <div id="deleteEventModal" class="modal-overlay">
     <div class="modal-box-danger mx-4">
       <div class="flex items-center justify-between mb-1">
         <h3 class="cinzel font-bold text-xl" style="color:#dc2626;">Delete Event</h3>
         <a href="#" class="text-red-300 hover:text-red-600 text-2xl leading-none"
-          style="text-decoration:none;">&times;</a>
+           style="text-decoration:none;">&times;</a>
       </div>
-
       <div style="display:flex;align-items:center;gap:8px;margin:16px 0 8px;">
         <div style="flex:1;height:1px;background:#fca5a5;"></div>
         <span style="color:#dc2626;font-size:0.75rem;letter-spacing:0.12em;font-family:'Cinzel',serif;">CONFIRM DELETE</span>
         <div style="flex:1;height:1px;background:#fca5a5;"></div>
       </div>
-
-      <div class="mb-5 p-3 rounded text-sm" style="background:#fef2f2; border:1px solid #fca5a5; color:#991b1b;">
+      <div class="mb-5 p-3 rounded text-sm" style="background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;">
         ⚠ This action is permanent. All pledges, payments, and roles linked to this event will also be deleted.
       </div>
-
       <form method="POST" action="/events/{{ event.event_id }}/delete" novalidate class="space-y-4">
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#991b1b;">
             To confirm, type the event name exactly:
           </label>
-          <p class="cinzel text-sm font-bold mb-2" style="color:#dc2626;">
-            {{ event.event_name }}
-          </p>
-          <input type="text" name="confirm_name"
-            placeholder="Type event name here..."
-            required/>
+          <p class="cinzel text-sm font-bold mb-2" style="color:#dc2626;">{{ event.event_name }}</p>
+          <input type="text" name="confirm_name" placeholder="Type event name here..." required/>
         </div>
-
         <div class="flex gap-3 pt-2">
           <button type="submit"
-            style="background:linear-gradient(135deg,#ef4444,#dc2626); color:white; border-radius:4px; font-size:0.78rem; letter-spacing:0.08em; padding:8px 18px; border:none; cursor:pointer; flex:1;"
-            class="cinzel font-semibold tracking-widest">
-            DELETE EVENT
-          </button>
-          <a href="#"
-            class="btn-outline cinzel font-semibold flex-1 text-center"
-            style="text-decoration:none;">CANCEL</a>
+            style="background:linear-gradient(135deg,#ef4444,#dc2626);color:white;border-radius:4px;font-size:0.78rem;letter-spacing:0.08em;padding:8px 18px;border:none;cursor:pointer;flex:1;"
+            class="cinzel font-semibold tracking-widest">DELETE EVENT</button>
+          <a href="#" class="btn-outline cinzel font-semibold flex-1 text-center" style="text-decoration:none;">CANCEL</a>
         </div>
-
       </form>
     </div>
   </div>
 
 
-  <!-- ══════════════════════════════════════════════
-       ADD CASH / LABH PLEDGE MODAL
-  ══════════════════════════════════════════════ -->
+  {# ══════════════════════════════════════════════
+     ADD CASH / LABH PLEDGE MODAL
+  ══════════════════════════════════════════════ #}
   <div id="addCashPledgeModal" class="modal-overlay">
     <div class="modal-box mx-4">
       <div class="flex items-center justify-between mb-1">
         <h3 class="cinzel font-bold text-xl" style="color:#7a2e00;">Add Cash / Labh Pledge</h3>
         <a href="#" class="text-amber-400 hover:text-amber-700 text-2xl leading-none"
-          style="text-decoration:none;">&times;</a>
+           style="text-decoration:none;">&times;</a>
       </div>
       <div class="divider mb-5">PLEDGE DETAILS</div>
-
       <form method="POST" action="/events/{{ event.event_id }}/pledges/create" novalidate class="space-y-4">
         <input type="hidden" name="pledge_type_group" value="cash"/>
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Donor *</label>
           <select name="donor_id" required>
@@ -738,10 +668,9 @@
           </select>
           <p class="text-xs mt-1" style="color:#a07040;">
             Donor not listed?
-            <a href="/donors?tab=donors#addDonorModal" style="color:#c2710c;">Add donor first</a>
+            <a href="/donors#addDonorModal" style="color:#c2710c;">Add donor first</a>
           </p>
         </div>
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Pledge Type *</label>
           <select name="pledge_type" required>
@@ -749,7 +678,6 @@
             <option value="labh">Labh</option>
           </select>
         </div>
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Category</label>
           <select name="pledge_category">
@@ -757,53 +685,40 @@
             <option value="role">Role</option>
           </select>
         </div>
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Promised Amount (₹) *</label>
           <input type="number" name="promised_amount" placeholder="0" min="0" step="100" required/>
         </div>
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Description</label>
-          <textarea name="description" rows="2"
-            placeholder="Optional notes" style="resize:none;"></textarea>
+          <textarea name="description" rows="2" placeholder="Optional notes" style="resize:none;"></textarea>
         </div>
-
         {% if pledge_form_error %}
-          <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
-            {{ pledge_form_error }}
-          </p>
+          <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{{ pledge_form_error }}</p>
         {% endif %}
-
         <div class="flex gap-3 pt-2">
-          <button type="submit"
-            class="btn-primary cinzel font-semibold tracking-widest flex-1">SAVE PLEDGE</button>
-          <a href="#"
-            class="btn-outline cinzel font-semibold flex-1 text-center"
-            style="text-decoration:none;">CANCEL</a>
+          <button type="submit" class="btn-primary cinzel font-semibold tracking-widest flex-1">SAVE PLEDGE</button>
+          <a href="#" class="btn-outline cinzel font-semibold flex-1 text-center" style="text-decoration:none;">CANCEL</a>
         </div>
-
       </form>
     </div>
   </div>
 
 
-  <!-- ══════════════════════════════════════════════
-       ADD IN-KIND PLEDGE MODAL
-  ══════════════════════════════════════════════ -->
+  {# ══════════════════════════════════════════════
+     ADD IN-KIND PLEDGE MODAL
+  ══════════════════════════════════════════════ #}
   <div id="addInKindPledgeModal" class="modal-overlay">
     <div class="modal-box mx-4">
       <div class="flex items-center justify-between mb-1">
         <h3 class="cinzel font-bold text-xl" style="color:#7a2e00;">Add In-Kind Pledge</h3>
         <a href="#" class="text-amber-400 hover:text-amber-700 text-2xl leading-none"
-          style="text-decoration:none;">&times;</a>
+           style="text-decoration:none;">&times;</a>
       </div>
       <div class="divider mb-5">IN-KIND DETAILS</div>
-
       <form method="POST" action="/events/{{ event.event_id }}/pledges/create" novalidate class="space-y-4">
         <input type="hidden" name="pledge_type_group" value="in_kind"/>
         <input type="hidden" name="pledge_type" value="in_kind"/>
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Donor *</label>
           <select name="donor_id" required>
@@ -816,7 +731,6 @@
             {% endfor %}
           </select>
         </div>
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Category</label>
           <select name="pledge_category">
@@ -824,20 +738,16 @@
             <option value="role">Role</option>
           </select>
         </div>
-
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Item Name *</label>
-            <input type="text" name="item_name"
-              placeholder="e.g. Rice, Flowers" required/>
+            <input type="text" name="item_name" placeholder="e.g. Rice, Flowers" required/>
           </div>
           <div>
             <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Item Category</label>
-            <input type="text" name="item_category"
-              placeholder="e.g. Food, Decoration"/>
+            <input type="text" name="item_category" placeholder="e.g. Food, Decoration"/>
           </div>
         </div>
-
         <div class="grid grid-cols-3 gap-3">
           <div>
             <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Quantity *</label>
@@ -852,46 +762,34 @@
             <input type="number" name="market_value" placeholder="0" min="0"/>
           </div>
         </div>
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Description</label>
-          <textarea name="description" rows="2"
-            placeholder="Optional notes" style="resize:none;"></textarea>
+          <textarea name="description" rows="2" placeholder="Optional notes" style="resize:none;"></textarea>
         </div>
-
         {% if inkind_form_error %}
-          <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
-            {{ inkind_form_error }}
-          </p>
+          <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{{ inkind_form_error }}</p>
         {% endif %}
-
         <div class="flex gap-3 pt-2">
-          <button type="submit"
-            class="btn-primary cinzel font-semibold tracking-widest flex-1">SAVE PLEDGE</button>
-          <a href="#"
-            class="btn-outline cinzel font-semibold flex-1 text-center"
-            style="text-decoration:none;">CANCEL</a>
+          <button type="submit" class="btn-primary cinzel font-semibold tracking-widest flex-1">SAVE PLEDGE</button>
+          <a href="#" class="btn-outline cinzel font-semibold flex-1 text-center" style="text-decoration:none;">CANCEL</a>
         </div>
-
       </form>
     </div>
   </div>
 
 
-  <!-- ══════════════════════════════════════════════
-       RECORD PAYMENT MODAL
-  ══════════════════════════════════════════════ -->
+  {# ══════════════════════════════════════════════
+     RECORD PAYMENT MODAL
+  ══════════════════════════════════════════════ #}
   <div id="recordPaymentModal" class="modal-overlay">
     <div class="modal-box mx-4">
       <div class="flex items-center justify-between mb-1">
         <h3 class="cinzel font-bold text-xl" style="color:#7a2e00;">Record Payment</h3>
         <a href="#" class="text-amber-400 hover:text-amber-700 text-2xl leading-none"
-          style="text-decoration:none;">&times;</a>
+           style="text-decoration:none;">&times;</a>
       </div>
       <div class="divider mb-5">PAYMENT DETAILS</div>
-
       <form method="POST" action="/events/{{ event.event_id }}/payments/create" novalidate class="space-y-4">
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Select Pledge *</label>
           <select name="pledge_id" required>
@@ -904,7 +802,6 @@
             {% endfor %}
           </select>
         </div>
-
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Amount (₹) *</label>
@@ -920,7 +817,6 @@
             </select>
           </div>
         </div>
-
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Receipt No</label>
@@ -928,65 +824,49 @@
           </div>
           <div>
             <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Reference No</label>
-            <input type="text" name="reference_number" placeholder="UPI / Cheque ref"/>
+            <input type="text" name="payment_ref" placeholder="UPI / Cheque ref"/>
           </div>
         </div>
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Payment Date</label>
           <input type="date" name="payment_date"/>
         </div>
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Recorded By</label>
           <input type="text" name="recorded_by" placeholder="Staff name"/>
         </div>
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Description</label>
-          <textarea name="description" rows="2"
-            placeholder="Optional notes" style="resize:none;"></textarea>
+          <textarea name="description" rows="2" placeholder="Optional notes" style="resize:none;"></textarea>
         </div>
-
         {% if payment_form_error %}
-          <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
-            {{ payment_form_error }}
-          </p>
+          <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{{ payment_form_error }}</p>
         {% endif %}
-
         <div class="flex gap-3 pt-2">
-          <button type="submit"
-            class="btn-primary cinzel font-semibold tracking-widest flex-1">RECORD PAYMENT</button>
-          <a href="#"
-            class="btn-outline cinzel font-semibold flex-1 text-center"
-            style="text-decoration:none;">CANCEL</a>
+          <button type="submit" class="btn-primary cinzel font-semibold tracking-widest flex-1">RECORD PAYMENT</button>
+          <a href="#" class="btn-outline cinzel font-semibold flex-1 text-center" style="text-decoration:none;">CANCEL</a>
         </div>
-
       </form>
     </div>
   </div>
 
 
-  <!-- ══════════════════════════════════════════════
-       ASSIGN ROLE MODAL
-  ══════════════════════════════════════════════ -->
+  {# ══════════════════════════════════════════════
+     ASSIGN ROLE MODAL
+  ══════════════════════════════════════════════ #}
   <div id="assignRoleModal" class="modal-overlay">
     <div class="modal-box mx-4">
       <div class="flex items-center justify-between mb-1">
         <h3 class="cinzel font-bold text-xl" style="color:#7a2e00;">Assign Role</h3>
         <a href="#" class="text-amber-400 hover:text-amber-700 text-2xl leading-none"
-          style="text-decoration:none;">&times;</a>
+           style="text-decoration:none;">&times;</a>
       </div>
       <div class="divider mb-5">ROLE DETAILS</div>
-
       <form method="POST" action="/events/{{ event.event_id }}/roles/create" novalidate class="space-y-4">
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Role Name *</label>
-          <input type="text" name="role_name"
-            placeholder="e.g. Puja Karta, Vaachak" required/>
+          <input type="text" name="role_name" placeholder="e.g. Puja Karta, Vaachak" required/>
         </div>
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Assign To (Donor) *</label>
           <select name="donor_id" required>
@@ -999,36 +879,24 @@
             {% endfor %}
           </select>
         </div>
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Target Amount (₹)</label>
           <input type="number" name="target_amount" placeholder="0" min="0" step="100"/>
         </div>
-
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Description</label>
-          <textarea name="description" rows="2"
-            placeholder="Role description or notes" style="resize:none;"></textarea>
+          <textarea name="description" rows="2" placeholder="Role description or notes" style="resize:none;"></textarea>
         </div>
-
         {% if role_form_error %}
-          <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
-            {{ role_form_error }}
-          </p>
+          <p class="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{{ role_form_error }}</p>
         {% endif %}
-
         <div class="flex gap-3 pt-2">
-          <button type="submit"
-            class="btn-primary cinzel font-semibold tracking-widest flex-1">ASSIGN ROLE</button>
-          <a href="#"
-            class="btn-outline cinzel font-semibold flex-1 text-center"
-            style="text-decoration:none;">CANCEL</a>
+          <button type="submit" class="btn-primary cinzel font-semibold tracking-widest flex-1">ASSIGN ROLE</button>
+          <a href="#" class="btn-outline cinzel font-semibold flex-1 text-center" style="text-decoration:none;">CANCEL</a>
         </div>
-
       </form>
     </div>
   </div>
-
 
 </body>
 </html>

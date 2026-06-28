@@ -6,7 +6,7 @@ from sqlalchemy import func
 from datetime import datetime, timezone
 
 from app.database import get_db
-from app.models import Event, Donor, Pledge, Payment, PledgeCategory, PledgeStatus, PledgeType
+from app.models import Event, Donor, Pledge, Payment, PledgeCategory, PledgeStatus, PledgeType, PaymentMode
 
 from app.routes.dashboard import router as dashboard_router
 from app.routes.users     import router as users_router
@@ -47,32 +47,49 @@ def format_date(value):
         return "—"
 
 
-templates.env.filters["format_amount"] = format_amount
-templates.env.filters["format_date"]   = format_date
+def format_date_input(value):
+    """YYYY-MM-DD for <input type='date'> value attribute."""
+    try:
+        if isinstance(value, str):
+            value = datetime.fromisoformat(value)
+        return value.strftime("%Y-%m-%d")
+    except Exception:
+        return ""
+
+
+templates.env.filters["format_amount"]     = format_amount
+templates.env.filters["format_date"]       = format_date
+templates.env.filters["format_date_input"] = format_date_input
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+def make_user():
+    """Placeholder until auth is wired up."""
+    return type("User", (), {"name": "Admin", "role": "admin"})()
+
+
+def compute_event_status(start, end, now):
+    if not start or not end:
+        return "upcoming"
+    if start.tzinfo is None: start = start.replace(tzinfo=timezone.utc)
+    if end.tzinfo   is None: end   = end.replace(tzinfo=timezone.utc)
+    if now < start:  return "upcoming"
+    if now > end:    return "completed"
+    return "active"
 
 
 # ── Shared dashboard query ────────────────────────────────────────────────────
 
 def get_dashboard_data(db: Session, status_filter: str = None, search: str = None):
-    now        = datetime.now(timezone.utc)
-    all_events = db.query(Event).all()
+    now          = datetime.now(timezone.utc)
+    all_events   = db.query(Event).all()
     total_donors = db.query(Donor).count()
 
     all_events_data = []
     for event in all_events:
-        start = event.start_date
-        end   = event.end_date
+        status = compute_event_status(event.start_date, event.end_date, now)
 
-        if start and end:
-            if start.tzinfo is None: start = start.replace(tzinfo=timezone.utc)
-            if end.tzinfo   is None: end   = end.replace(tzinfo=timezone.utc)
-            if now < start:   status = "upcoming"
-            elif now > end:   status = "completed"
-            else:             status = "active"
-        else:
-            status = "upcoming"
-
-        # only DONATION pledges count toward financials
         total_promised = float(db.query(
             func.coalesce(func.sum(Pledge.promised_amount), 0)
         ).filter(
@@ -92,10 +109,9 @@ def get_dashboard_data(db: Session, status_filter: str = None, search: str = Non
             func.count(func.distinct(Pledge.donor_id))
         ).filter(
             Pledge.event_id == event.event_id,
-            Pledge.donor_id != None                     # exclude unassigned roles
+            Pledge.donor_id != None
         ).scalar()
 
-        # roles = ROLE pledges with no donor yet
         open_roles = db.query(func.count(Pledge.pledge_id)).filter(
             Pledge.event_id == event.event_id,
             Pledge.pledge_category == PledgeCategory.ROLE,
@@ -136,16 +152,16 @@ def get_dashboard_data(db: Session, status_filter: str = None, search: str = Non
     return summary, filtered
 
 
-# ── HTML routes ───────────────────────────────────────────────────────────────
+# ── Routes ────────────────────────────────────────────────────────────────────
 
 @app.get("/", response_class=HTMLResponse)
 def root(request: Request):
-    return templates.TemplateResponse(request, "login.html")
+    return templates.TemplateResponse(request, "login.html", {})
 
 
 @app.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):
-    return templates.TemplateResponse(request, "login.html")
+    return templates.TemplateResponse(request, "login.html", {})
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
@@ -155,15 +171,14 @@ def dashboard_page(
     q: str = None,
     db: Session = Depends(get_db)
 ):
-    current_user = type("User", (), {"name": "Admin", "role": "admin"})()
     summary, events = get_dashboard_data(db, status_filter=status, search=q)
     return templates.TemplateResponse(request, "dashboard.html", {
-        "current_user":   current_user,
-        "summary":        summary,
-        "events":         events,
-        "status_filter":  status or "",
-        "search_query":   q or "",
-        "form_error":     None,
+        "current_user":    make_user(),
+        "summary":         summary,
+        "events":          events,
+        "status_filter":   status or "",
+        "search_query":    q or "",
+        "form_error":      None,
         "success_message": None,
     })
 
@@ -178,12 +193,10 @@ async def create_event_post(request: Request, db: Session = Depends(get_db)):
     end_date_str   = form.get("end_date",   "").strip()
     description    = form.get("description","").strip()
 
-    current_user = type("User", (), {"name": "Admin", "role": "admin"})()
-
     def error(msg):
         summary, events = get_dashboard_data(db)
         return templates.TemplateResponse(request, "dashboard.html", {
-            "current_user":    current_user,
+            "current_user":    make_user(),
             "summary":         summary,
             "events":          events,
             "status_filter":   "",
@@ -214,24 +227,21 @@ async def create_event_post(request: Request, db: Session = Depends(get_db)):
     db.add(new_event)
     db.flush()
 
-    # parse the 3 role slots from the form
     for i in range(3):
         role_name     = form.get(f"roles[{i}][role_name]",     "").strip()
         target_amount = form.get(f"roles[{i}][target_amount]", "").strip()
         role_desc     = form.get(f"roles[{i}][description]",   "").strip()
-
         if not role_name:
             continue
-
         db.add(Pledge(
-            event_id         = new_event.event_id,
-            donor_id         = None,
-            pledge_type      = PledgeType.CASH,
-            pledge_category  = PledgeCategory.ROLE,
-            promised_amount  = float(target_amount) if target_amount else None,
-            item_name        = role_name,
-            description      = role_desc or None,
-            status           = PledgeStatus.PENDING,
+            event_id        = new_event.event_id,
+            donor_id        = None,
+            pledge_type     = PledgeType.CASH,
+            pledge_category = PledgeCategory.ROLE,
+            promised_amount = float(target_amount) if target_amount else None,
+            item_name       = role_name,
+            description     = role_desc or None,
+            status          = PledgeStatus.PENDING,
         ))
 
     db.commit()
@@ -239,13 +249,211 @@ async def create_event_post(request: Request, db: Session = Depends(get_db)):
 
 
 @app.get("/events/{event_id}", response_class=HTMLResponse)
-def event_detail_page(request: Request, event_id: int, db: Session = Depends(get_db)):
+def event_detail_page(
+    request: Request,
+    event_id: int,
+    tab: str = "pledges",
+    q: str = None,
+    status: str = None,
+    pledge_type: str = None,
+    rq: str = None,
+    pq: str = None,
+    payment_mode: str = None,
+    db: Session = Depends(get_db)
+):
+    # ── 1. Event ──────────────────────────────────────────────────────────────
     event = db.query(Event).filter(Event.event_id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
+
+    now          = datetime.now(timezone.utc)
+    event_status = compute_event_status(event.start_date, event.end_date, now)
+
+    # ── 2. Financials ─────────────────────────────────────────────────────────
+    total_pledged = float(db.query(
+        func.coalesce(func.sum(Pledge.promised_amount), 0)
+    ).filter(
+        Pledge.event_id == event_id,
+        Pledge.pledge_category == PledgeCategory.DONATION
+    ).scalar())
+
+    total_received = float(db.query(
+        func.coalesce(func.sum(Payment.amount), 0)
+    ).join(Pledge, Payment.pledge_id == Pledge.pledge_id)
+     .filter(
+        Pledge.event_id == event_id,
+        Pledge.pledge_category == PledgeCategory.DONATION
+    ).scalar())
+
+    total_donors = db.query(
+        func.count(func.distinct(Pledge.donor_id))
+    ).filter(
+        Pledge.event_id == event_id,
+        Pledge.donor_id != None
+    ).scalar()
+
+    total_pledges = db.query(func.count(Pledge.pledge_id)).filter(
+        Pledge.event_id == event_id,
+        Pledge.pledge_category == PledgeCategory.DONATION
+    ).scalar()
+
+    anonymous_count = db.query(func.count(Pledge.pledge_id)).join(
+        Donor, Pledge.donor_id == Donor.donor_id
+    ).filter(
+        Pledge.event_id == event_id,
+        Donor.is_anonymous == True
+    ).scalar()
+
+    # ── 3. Event dict ─────────────────────────────────────────────────────────
+    event_data = {
+        "event_id":        event.event_id,
+        "event_name":      event.event_name,
+        "category":        event.category,
+        "start_date":      event.start_date,
+        "end_date":        event.end_date,
+        "description":     event.description,
+        "status":          event_status,
+        "total_pledged":   total_pledged,
+        "total_received":  total_received,
+        "total_expenses":  0,
+        "total_donors":    total_donors,
+        "total_pledges":   total_pledges,
+        "anonymous_count": anonymous_count,
+    }
+
+    # ── 4. Pledges tab ────────────────────────────────────────────────────────
+    pledge_query = db.query(Pledge, Donor).outerjoin(
+        Donor, Pledge.donor_id == Donor.donor_id
+    ).filter(
+        Pledge.event_id == event_id,
+        Pledge.pledge_category == PledgeCategory.DONATION
+    )
+
+    if q:
+        pledge_query = pledge_query.filter(
+            func.lower(Donor.first_name + " " + Donor.last_name).contains(q.lower())
+        )
+    if status:
+        status_map = {
+            "pending":   PledgeStatus.PENDING,
+            "partial":   PledgeStatus.PARTIAL,
+            "completed": PledgeStatus.COMPLETED,
+        }
+        if status in status_map:
+            pledge_query = pledge_query.filter(Pledge.status == status_map[status])
+    if pledge_type:
+        type_map = {
+            "cash":    PledgeType.CASH,
+            "labh":    PledgeType.LABH,
+            "in_kind": PledgeType.IN_KIND,
+        }
+        if pledge_type in type_map:
+            pledge_query = pledge_query.filter(Pledge.pledge_type == type_map[pledge_type])
+
+    pledges = []
+    for pledge, donor in pledge_query.all():
+        received = float(db.query(
+            func.coalesce(func.sum(Payment.amount), 0)
+        ).filter(Payment.pledge_id == pledge.pledge_id).scalar())
+
+        if donor:
+            donor_name = f"{donor.first_name or ''} {donor.last_name or ''}".strip()
+            if donor.is_anonymous:
+                donor_name = "Anonymous"
+        else:
+            donor_name = "—"
+
+        pledges.append({
+            "pledge_id":       pledge.pledge_id,
+            "donor_name":      donor_name,
+            "pledge_type":     pledge.pledge_type.value.lower() if pledge.pledge_type else "—",
+            "pledge_category": pledge.pledge_category.value.lower() if pledge.pledge_category else "—",
+            "promised_amount": float(pledge.promised_amount or 0),
+            "received_amount": received,
+            "status":          pledge.status.value.lower() if pledge.status else "pending",
+            "description":     pledge.description,
+        })
+
+    # ── 5. Roles tab ──────────────────────────────────────────────────────────
+    role_query = db.query(Pledge, Donor).outerjoin(
+        Donor, Pledge.donor_id == Donor.donor_id
+    ).filter(
+        Pledge.event_id == event_id,
+        Pledge.pledge_category == PledgeCategory.ROLE
+    )
+
+    if rq:
+        role_query = role_query.filter(
+            func.lower(Pledge.item_name).contains(rq.lower()) |
+            func.lower(Donor.first_name + " " + Donor.last_name).contains(rq.lower())
+        )
+
+    roles = []
+    for pledge, donor in role_query.all():
+        donor_name = f"{donor.first_name or ''} {donor.last_name or ''}".strip() if donor else "Unassigned"
+        roles.append({
+            "role_id":       pledge.pledge_id,
+            "role_name":     pledge.item_name or "—",
+            "donor_name":    donor_name,
+            "target_amount": float(pledge.promised_amount or 0),
+            "description":   pledge.description,
+            "status":        pledge.status.value.lower() if pledge.status else "pending",
+        })
+
+    # ── 6. Payments tab ───────────────────────────────────────────────────────
+    payment_query = db.query(Payment).join(
+        Pledge, Payment.pledge_id == Pledge.pledge_id
+    ).filter(Pledge.event_id == event_id)
+
+    if pq:
+        payment_query = payment_query.filter(
+            func.lower(Payment.donor_name).contains(pq.lower()) |
+            func.lower(Payment.receipt_no).contains(pq.lower())
+        )
+    if payment_mode:
+        mode_map = {
+            "cash":   PaymentMode.CASH,
+            "upi":    PaymentMode.UPI,
+            "cheque": PaymentMode.CHEQUE,
+            "neft":   PaymentMode.NEFT,
+        }
+        if payment_mode in mode_map:
+            payment_query = payment_query.filter(Payment.payment_mode == mode_map[payment_mode])
+
+    payments = [{
+        "receipt_no":       p.receipt_no,
+        "donor_name":       p.donor_name or "—",
+        "amount":           float(p.amount or 0),
+        "payment_mode":     p.payment_mode.value.lower() if p.payment_mode else "—",
+        "reference_number": p.payment_ref,
+        "payment_date":     p.payment_date,
+        "recorded_by":      p.recorded_by,
+    } for p in payment_query.order_by(Payment.payment_date.desc()).all()]
+
+    # ── 7. Donors for modal dropdowns ─────────────────────────────────────────
+    all_donors = db.query(Donor).order_by(Donor.first_name).all()
+
     return templates.TemplateResponse(request, "event.html", {
-        "event":    event,
-        "event_id": event_id,
+        "request":            request,
+        "current_user":       make_user(),
+        "event":              event_data,
+        "pledges":            pledges,
+        "roles":              roles,
+        "payments":           payments,
+        "donors":             all_donors,
+        "active_tab":         tab,
+        "q":                  q or "",
+        "status":             status or "",
+        "pledge_type":        pledge_type or "",
+        "rq":                 rq or "",
+        "pq":                 pq or "",
+        "payment_mode":       payment_mode or "",
+        "flash_error":        None,
+        "flash_success":      None,
+        "pledge_form_error":  None,
+        "inkind_form_error":  None,
+        "payment_form_error": None,
+        "role_form_error":    None,
     })
 
 
@@ -253,7 +461,8 @@ def event_detail_page(request: Request, event_id: int, db: Session = Depends(get
 def donors_page(request: Request, db: Session = Depends(get_db)):
     donors = db.query(Donor).all()
     return templates.TemplateResponse(request, "donor.html", {
-        "donors": donors,
+        "current_user": make_user(),
+        "donors":       donors,
     })
 
 
