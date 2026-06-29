@@ -175,18 +175,6 @@
 
   <main class="max-w-7xl mx-auto px-6 py-8">
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="mb-4 px-4 py-3 rounded text-sm font-semibold
-            {% if category == 'error' %}bg-red-50 border border-red-200 text-red-700
-            {% else %}bg-green-50 border border-green-200 text-green-700{% endif %}">
-            {{ message }}
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-
     <div class="mb-6">
       <div class="divider mb-3">MANAGEMENT</div>
       <h2 class="cinzel text-2xl font-bold" style="color:#7a2e00;">Donors &amp; Families</h2>
@@ -195,30 +183,30 @@
 
     <!-- tabs via query param -->
     <div class="border-b border-amber-200 mb-6 flex">
-      <a href="/donors?tab=donors{% if request.args.get('q') %}&q={{ request.args.get('q') }}{% endif %}"
-        class="tab-link cinzel {% if request.args.get('tab', 'donors') == 'donors' %}active-tab{% endif %}">
+      <a href="/donors?tab=donors{% if request.query_params.get('q') %}&q={{ request.query_params.get('q') }}{% endif %}"
+        class="tab-link cinzel {% if request.query_params.get('tab', 'donors') == 'donors' %}active-tab{% endif %}">
         DONORS
       </a>
-      <a href="/donors?tab=families{% if request.args.get('fq') %}&fq={{ request.args.get('fq') }}{% endif %}"
-        class="tab-link cinzel {% if request.args.get('tab') == 'families' %}active-tab{% endif %}">
+      <a href="/donors?tab=families{% if request.query_params.get('fq') %}&fq={{ request.query_params.get('fq') }}{% endif %}"
+        class="tab-link cinzel {% if request.query_params.get('tab') == 'families' %}active-tab{% endif %}">
         FAMILIES
       </a>
     </div>
 
 
     <!-- ═══════════════════════ DONORS TAB ═══════════════════════ -->
-    {% if request.args.get('tab', 'donors') == 'donors' %}
+    {% if request.query_params.get('tab', 'donors') == 'donors' %}
 
       <div class="flex items-center justify-between mb-4 gap-4">
 
         <form method="GET" action="/donors" class="flex gap-2 items-center">
           <input type="hidden" name="tab" value="donors"/>
           <input type="text" name="q"
-            value="{{ request.args.get('q', '') }}"
+            value="{{ request.query_params.get('q', '') }}"
             placeholder="Search by name, mobile, or email..."
             style="width:280px;"/>
           <button type="submit" class="btn-primary cinzel text-xs font-semibold px-3 py-2">SEARCH</button>
-          {% if request.args.get('q') %}
+          {% if request.query_params.get('q') %}
             <a href="/donors?tab=donors" class="btn-outline cinzel text-xs font-semibold">✕ CLEAR</a>
           {% endif %}
         </form>
@@ -289,9 +277,9 @@
           <div class="text-center py-14">
             <p class="text-3xl mb-2">🪔</p>
             <p class="cinzel text-sm font-semibold" style="color:#c2710c;">No donors found</p>
-            {% if request.args.get('q') %}
+            {% if request.query_params.get('q') %}
               <p class="text-xs mt-1" style="color:#a07040;">
-                No results for "{{ request.args.get('q') }}".
+                No results for "{{ request.query_params.get('q') }}".
                 <a href="/donors?tab=donors" style="color:#c2710c;">Clear search</a>
               </p>
             {% endif %}
@@ -301,18 +289,18 @@
 
 
     <!-- ═══════════════════════ FAMILIES TAB ═══════════════════════ -->
-    {% elif request.args.get('tab') == 'families' %}
+    {% elif request.query_params.get('tab') == 'families' %}
 
       <div class="flex items-center justify-between mb-4 gap-4">
 
         <form method="GET" action="/donors" class="flex gap-2 items-center">
           <input type="hidden" name="tab" value="families"/>
           <input type="text" name="fq"
-            value="{{ request.args.get('fq', '') }}"
+            value="{{ request.query_params.get('fq', '') }}"
             placeholder="Search families..."
             style="width:280px;"/>
           <button type="submit" class="btn-primary cinzel text-xs font-semibold px-3 py-2">SEARCH</button>
-          {% if request.args.get('fq') %}
+          {% if request.query_params.get('fq') %}
             <a href="/donors?tab=families" class="btn-outline cinzel text-xs font-semibold">✕ CLEAR</a>
           {% endif %}
         </form>
@@ -383,9 +371,9 @@
         <div class="text-center py-14">
           <p class="text-3xl mb-2">🪔</p>
           <p class="cinzel text-sm font-semibold" style="color:#c2710c;">No families found</p>
-          {% if request.args.get('fq') %}
+          {% if request.query_params.get('fq') %}
             <p class="text-xs mt-1" style="color:#a07040;">
-              No results for "{{ request.args.get('fq') }}".
+              No results for "{{ request.query_params.get('fq') }}".
               <a href="/donors?tab=families" style="color:#c2710c;">Clear search</a>
             </p>
           {% endif %}
