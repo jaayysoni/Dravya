@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from app.database import get_db
 from app.models import Event, Donor, Pledge, Payment, PledgeCategory, PledgeStatus, PledgeType, PaymentMode
 
+from app.routes.reports import router as reports_router
 from app.routes.dashboard import router as dashboard_router
 from app.routes.users     import router as users_router
 from app.routes.events    import router as events_router
@@ -480,3 +481,4 @@ app.include_router(donors_router)
 app.include_router(pledges_router)
 app.include_router(payments_router)
 app.include_router(families_router)
+app.include_router(reports_router)

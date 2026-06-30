@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dravya — Reports</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+    body { font-family: 'Crimson Text', serif; background-color: #fffbf2; }
+    .cinzel { font-family: 'Cinzel', serif; }
+    .top-strip {
+      background: repeating-linear-gradient(90deg,#c2710c 0px,#c2710c 8px,#e89a3c 8px,#e89a3c 16px,#fffbf2 16px,#fffbf2 24px);
+      height: 5px;
+    }
+    .navbar { background: linear-gradient(135deg, #7a2e00, #c2710c); }
+    .nav-link { color: #fde9c9; font-size: 0.85rem; letter-spacing: 0.08em; }
+    .nav-link:hover { color: #fff; }
+    .nav-link.active { color: #fff; border-bottom: 2px solid #fde9c9; }
+    .card {
+      background: white; border: 1px solid #f0d9b5;
+      border-radius: 4px; box-shadow: 0 2px 8px rgba(194,113,12,0.07);
+    }
+    .stat-card {
+      background: white; border: 1px solid #f0d9b5;
+      border-top: 4px solid #c2710c; border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(194,113,12,0.08);
+    }
+    .divider {
+      display: flex; align-items: center; gap: 8px;
+      color: #c2710c; font-size: 0.75rem; letter-spacing: 0.12em;
+    }
+    .divider::before, .divider::after { content:''; flex:1; height:1px; background:#e89a3c; }
+    .btn-primary {
+      background: linear-gradient(135deg, #e07b12, #c2710c);
+      color: white; border-radius: 4px;
+      font-size: 0.78rem; letter-spacing: 0.08em;
+      transition: all 0.2s; padding: 8px 18px;
+      text-decoration: none; display: inline-block; border: none; cursor: pointer;
+    }
+    .btn-primary:hover { background: linear-gradient(135deg,#c2710c,#a05e08); transform: translateY(-1px); }
+    .btn-outline {
+      border: 1px solid #c2710c; color: #c2710c;
+      border-radius: 4px; font-size: 0.78rem;
+      letter-spacing: 0.08em; transition: all 0.2s;
+      padding: 7px 14px; text-decoration: none; display: inline-block; cursor: pointer; background: white;
+    }
+    .btn-outline:hover { background: #fff8f0; }
+    .filter-btn {
+      font-size: 0.72rem; padding: 6px 14px;
+      border-radius: 4px; border: 1px solid #f0d9b5;
+      font-weight: 600; letter-spacing: 0.06em;
+      color: #c2710c; background: white;
+      text-decoration: none; display: inline-block; white-space: nowrap;
+    }
+    .filter-btn.active-filter { background: #c2710c; color: white; }
+    .filter-btn:hover { background: #fef3c7; color: #7a2e00; }
+    .filter-btn.active-filter:hover { background: #a05e08; color: white; }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      background: #fef3e2; color: #7a2e00;
+      font-family: 'Cinzel', serif; font-size: 0.68rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 9px 12px; text-align: left;
+      border-bottom: 2px solid #f0d9b5; white-space: nowrap;
+    }
+    td { padding: 10px 12px; border-bottom: 1px solid #fef3e2; font-size: 0.86rem; color: #4a3000; vertical-align: top; }
+    tr:hover td { background: #fffbf5; }
+    .badge { font-size: 0.65rem; padding: 3px 9px; border-radius: 9999px; font-weight: 700; letter-spacing: 0.03em; white-space: nowrap; }
+    .badge-payment   { background: #d1fae5; color: #065f46; }
+    .badge-pledge    { background: #dbeafe; color: #1e40af; }
+    .badge-donor     { background: #fef3c7; color: #92400e; }
+    .badge-family    { background: #fce7f3; color: #9d174d; }
+    .badge-event     { background: #ede9fe; color: #5b21b6; }
+    .badge-role      { background: #ffedd5; color: #9a3412; }
+    .badge-user      { background: #e0f2fe; color: #075985; }
+    .role-tag {
+      font-size: 0.62rem; padding: 1px 7px; border-radius: 3px;
+      background: #fffbf2; border: 1px solid #f0d9b5; color: #a07040;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    input[type="text"], input[type="date"], input[type="number"], select {
+      border: 1px solid #f0d9b5; border-radius: 4px;
+      padding: 7px 11px; font-size: 0.85rem;
+      background: #fffbf5; color: #4a3000;
+      font-family: 'Crimson Text', serif;
+      width: 100%; outline: none;
+    }
+    input:focus, select:focus { border-color: #c2710c; box-shadow: 0 0 0 2px rgba(194,113,12,0.12); }
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 50;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay:target { display: flex; }
+    .modal-box {
+      background: #fffbf2; border-top: 4px solid #c2710c;
+      border-radius: 6px; width: 100%; max-width: 560px;
+      max-height: 90vh; overflow-y: auto; padding: 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .radio-card {
+      border: 1px solid #f0d9b5; border-radius: 4px;
+      padding: 10px 14px; display: flex; align-items: center; gap: 10px;
+      cursor: pointer; background: white;
+    }
+    .radio-card:has(input:checked) { border-color: #c2710c; background: #fef3e2; }
+    .radio-card input { accent-color: #c2710c; width: 15px; height: 15px; }
+    .scope-block {
+      border: 1px solid #f0d9b5; border-left: 3px solid #c2710c;
+      border-radius: 4px; padding: 14px; background: #fffbf2;
+    }
+    .pagination-link {
+      font-size: 0.78rem; padding: 5px 11px; border-radius: 4px;
+      border: 1px solid #f0d9b5; color: #c2710c; text-decoration: none;
+    }
+    .pagination-link.active-page { background: #c2710c; color: white; }
+    .pagination-link:hover { background: #fef3c7; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <div class="top-strip"></div>
+
+  <nav class="navbar px-6 py-3 flex items-center justify-between shadow-md">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl">🕉</span>
+      <div>
+        <h1 class="cinzel text-white font-bold text-lg tracking-widest leading-tight">DRAVYA</h1>
+        <p class="text-xs tracking-widest" style="color:#fde9c9; font-size:0.65rem;">JAIN TEMPLE MANAGEMENT</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-6">
+      <a href="/dashboard" class="nav-link cinzel">Dashboard</a>
+      <a href="/donors" class="nav-link cinzel">Donors &amp; Families</a>
+      <a href="/reports" class="nav-link cinzel active">Reports</a>
+    </div>
+    <div class="flex items-center gap-3">
+      {% if current_user.role == 'admin' %}
+      <a href="/users/create" class="cinzel px-4 py-2 text-xs font-semibold tracking-widest border border-amber-300 rounded" style="color:#fde9c9; text-decoration:none;">+ USER</a>
+      {% endif %}
+      <div class="w-px h-6 bg-amber-400 opacity-40"></div>
+      <a href="/logout" class="nav-link cinzel text-xs" style="text-decoration:none;">LOGOUT</a>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-6 py-8">
+
+    <!-- ═══════ HEADER ═══════ -->
+    <div class="flex items-start justify-between mb-6 flex-wrap gap-4">
+      <div>
+        <div class="divider mb-3">ACTIVITY &amp; TRANSACTION LOG</div>
+        <h2 class="cinzel text-2xl font-bold" style="color:#7a2e00;">Reports</h2>
+        <p class="text-sm mt-1" style="color:#a07040;">
+          Every payment, pledge, donor, family, role and user action — who did it and when.
+        </p>
+      </div>
+
+      {% if current_user.role in ['admin', 'manager'] %}
+      <a href="#downloadReportModal" class="btn-primary cinzel font-semibold tracking-widest" style="text-decoration:none;">
+        ⬇ DOWNLOAD REPORT
+      </a>
+      {% endif %}
+    </div>
+
+    <!-- ═══════ SUMMARY STATS (respects current filters) ═══════ -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-7">
+      <div class="stat-card p-4">
+        <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Total Activities</p>
+        <p class="cinzel text-2xl font-bold" style="color:#c2710c;">{{ summary.total_activities }}</p>
+      </div>
+      <div class="stat-card p-4">
+        <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Payments Logged</p>
+        <p class="cinzel text-2xl font-bold" style="color:#16a34a;">{{ summary.total_payments }}</p>
+        <p class="text-xs mt-0.5" style="color:#b08050;">{{ summary.total_payment_amount | format_amount }}</p>
+      </div>
+      <div class="stat-card p-4">
+        <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Pledges Logged</p>
+        <p class="cinzel text-2xl font-bold" style="color:#1e40af;">{{ summary.total_pledges }}</p>
+        <p class="text-xs mt-0.5" style="color:#b08050;">{{ summary.total_pledge_amount | format_amount }}</p>
+      </div>
+      <div class="stat-card p-4">
+        <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Donors / Families Added</p>
+        <p class="cinzel text-2xl font-bold" style="color:#92400e;">{{ summary.total_donors_added }} / {{ summary.total_families_added }}</p>
+      </div>
+      <div class="stat-card p-4">
+        <p class="text-xs tracking-widest uppercase font-semibold mb-1" style="color:#a07040;">Events / Roles Created</p>
+        <p class="cinzel text-2xl font-bold" style="color:#5b21b6;">{{ summary.total_events_added }} / {{ summary.total_roles_added }}</p>
+      </div>
+    </div>
+
+    <!-- ═══════ FILTERS ═══════ -->
+    <div class="card p-5 mb-5">
+      <form method="GET" action="/reports" class="space-y-4">
+
+        <!-- action type pills -->
+        <div>
+          <p class="text-xs font-semibold tracking-widest uppercase mb-2" style="color:#a07040;">Activity Type</p>
+          <div class="flex flex-wrap gap-2">
+            <a href="/reports?{{ qs_without('type') }}" class="filter-btn cinzel {% if not request.query_params.get('type') %}active-filter{% endif %}">ALL</a>
+            <a href="/reports?{{ qs_with('type','payment') }}" class="filter-btn cinzel {% if request.query_params.get('type')=='payment' %}active-filter{% endif %}">💰 PAYMENTS</a>
+            <a href="/reports?{{ qs_with('type','pledge') }}" class="filter-btn cinzel {% if request.query_params.get('type')=='pledge' %}active-filter{% endif %}">📜 PLEDGES</a>
+            <a href="/reports?{{ qs_with('type','donor') }}" class="filter-btn cinzel {% if request.query_params.get('type')=='donor' %}active-filter{% endif %}">👤 DONORS ADDED</a>
+            <a href="/reports?{{ qs_with('type','family') }}" class="filter-btn cinzel {% if request.query_params.get('type')=='family' %}active-filter{% endif %}">🏠 FAMILIES ADDED</a>
+            <a href="/reports?{{ qs_with('type','role') }}" class="filter-btn cinzel {% if request.query_params.get('type')=='role' %}active-filter{% endif %}">🏷 ROLES ADDED</a>
+            <a href="/reports?{{ qs_with('type','event') }}" class="filter-btn cinzel {% if request.query_params.get('type')=='event' %}active-filter{% endif %}">📅 EVENTS</a>
+            <a href="/reports?{{ qs_with('type','user') }}" class="filter-btn cinzel {% if request.query_params.get('type')=='user' %}active-filter{% endif %}">⚙ USER ACTIONS</a>
+            <a href="/reports?{{ qs_with('type','goods') }}" class="filter-btn cinzel {% if request.query_params.get('type')=='goods' %}active-filter{% endif %}">📦 GOODS / IN-KIND</a>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+          <div>
+            <label class="text-xs font-semibold tracking-widest uppercase mb-1 block" style="color:#a07040;">Event</label>
+            <select name="event_id">
+              <option value="">— All Events —</option>
+              {% for ev in all_events %}
+                <option value="{{ ev.event_id }}" {% if request.query_params.get('event_id')|string == ev.event_id|string %}selected{% endif %}>{{ ev.event_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold tracking-widest uppercase mb-1 block" style="color:#a07040;">From Date</label>
+            <input type="date" name="from_date" value="{{ request.query_params.get('from_date','') }}"/>
+          </div>
+          <div>
+            <label class="text-xs font-semibold tracking-widest uppercase mb-1 block" style="color:#a07040;">To Date</label>
+            <input type="date" name="to_date" value="{{ request.query_params.get('to_date','') }}"/>
+          </div>
+          <div>
+            <label class="text-xs font-semibold tracking-widest uppercase mb-1 block" style="color:#a07040;">Performed By</label>
+            <select name="user_id">
+              <option value="">— All Users —</option>
+              {% for u in all_users %}
+                <option value="{{ u.user_id }}" {% if request.query_params.get('user_id')|string == u.user_id|string %}selected{% endif %}>{{ u.username }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="flex gap-2">
+            <input type="text" name="q" value="{{ request.query_params.get('q','') }}" placeholder="Search description, donor..."/>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center pt-1">
+          <a href="/reports" class="btn-outline cinzel text-xs font-semibold">✕ CLEAR FILTERS</a>
+          <button type="submit" class="btn-primary cinzel text-xs font-semibold">APPLY FILTERS</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ═══════ ACTIVITY TABLE ═══════ -->
+    <div class="card overflow-hidden mb-5">
+      {% if activities %}
+        <div class="overflow-x-auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Date &amp; Time</th>
+              <th>Type</th>
+              <th>Description</th>
+              <th>Event</th>
+              <th>Amount</th>
+              <th>Performed By</th>
+              <th>Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in activities %}
+              <tr>
+                <td class="text-xs whitespace-nowrap" style="color:#a07040;">
+                  {{ log.created_at | format_datetime }}
+                </td>
+                <td>
+                  {% if log.action_type == 'PAYMENT_ADDED' %}
+                    <span class="badge badge-payment">Payment</span>
+                  {% elif log.action_type == 'PLEDGE_ADDED' %}
+                    <span class="badge badge-pledge">Pledge</span>
+                  {% elif log.action_type in ['DONOR_ADDED','DONOR_EDITED'] %}
+                    <span class="badge badge-donor">Donor{{ ' Edit' if log.action_type == 'DONOR_EDITED' }}</span>
+                  {% elif log.action_type in ['FAMILY_ADDED','FAMILY_EDITED'] %}
+                    <span class="badge badge-family">Family{{ ' Edit' if log.action_type == 'FAMILY_EDITED' }}</span>
+                  {% elif log.action_type in ['EVENT_CREATED','EVENT_EDITED'] %}
+                    <span class="badge badge-event">Event{{ ' Edit' if log.action_type == 'EVENT_EDITED' }}</span>
+                  {% elif log.action_type == 'ROLE_ADDED' %}
+                    <span class="badge badge-role">Role</span>
+                  {% elif log.action_type == 'GOODS_RECEIVED' %}
+                    <span class="badge badge-pledge">In-Kind</span>
+                  {% elif log.action_type in ['USER_CREATED','USER_EDITED'] %}
+                    <span class="badge badge-user">User{{ ' Edit' if log.action_type == 'USER_EDITED' }}</span>
+                  {% endif %}
+                </td>
+                <td class="text-sm" style="max-width:320px;">{{ log.description }}</td>
+                <td class="text-xs">
+                  {% if log.event_name %}
+                    <a href="/events/{{ log.event_id }}" style="color:#c2710c; text-decoration:none;">{{ log.event_name }}</a>
+                  {% else %}—{% endif %}
+                </td>
+                <td class="text-sm font-semibold" style="color:{{ '#16a34a' if log.action_type == 'PAYMENT_ADDED' else '#7a2e00' }};">
+                  {% if log.amount %}{{ log.amount | format_amount }}{% else %}—{% endif %}
+                </td>
+                <td class="text-sm font-semibold" style="color:#4a3000;">{{ log.performed_by_name or 'System' }}</td>
+                <td><span class="role-tag">{{ log.performed_by_role or '—' }}</span></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        </div>
+
+        <!-- pagination -->
+        <div class="flex justify-between items-center px-5 py-4 border-t border-amber-100">
+          <p class="text-xs" style="color:#a07040;">
+            Showing {{ pagination.start }}–{{ pagination.end }} of {{ pagination.total }} activities
+          </p>
+          <div class="flex gap-1">
+            {% if pagination.has_prev %}
+              <a href="/reports?{{ qs_with('page', pagination.page - 1) }}" class="pagination-link">‹ Prev</a>
+            {% endif %}
+            {% for p in pagination.pages %}
+              <a href="/reports?{{ qs_with('page', p) }}" class="pagination-link {% if p == pagination.page %}active-page{% endif %}">{{ p }}</a>
+            {% endfor %}
+            {% if pagination.has_next %}
+              <a href="/reports?{{ qs_with('page', pagination.page + 1) }}" class="pagination-link">Next ›</a>
+            {% endif %}
+          </div>
+        </div>
+
+      {% else %}
+        <div class="text-center py-16">
+          <p class="text-4xl mb-3">🪔</p>
+          <p class="cinzel text-lg font-semibold" style="color:#c2710c;">No Activity Found</p>
+          <p class="text-sm mt-1" style="color:#a07040;">No actions match your current filters. <a href="/reports" style="color:#c2710c;">Clear filters</a></p>
+        </div>
+      {% endif %}
+    </div>
+
+  </main>
+
+  <div class="top-strip mt-8"></div>
+
+
+  <!-- ═══════════════════════════════════════════
+       DOWNLOAD REPORT MODAL — CSS :target, zero JS
+  ════════════════════════════════════════════ -->
+  <div id="downloadReportModal" class="modal-overlay">
+    <div class="modal-box mx-4">
+      <div class="flex items-center justify-between mb-1">
+        <h3 class="cinzel text-xl font-bold" style="color:#7a2e00;">Download Report</h3>
+        <a href="#" class="text-amber-400 hover:text-amber-700 text-2xl leading-none" style="text-decoration:none;">&times;</a>
+      </div>
+      <div class="divider mb-5">EXPORT OPTIONS</div>
+
+      <form method="GET" action="/reports/export" novalidate class="space-y-5">
+
+        <!-- SCOPE -->
+        <div class="scope-block">
+          <p class="cinzel text-xs font-bold tracking-widest mb-3" style="color:#c2710c;">REPORT SCOPE</p>
+          <div class="space-y-2">
+            <label class="radio-card">
+              <input type="radio" name="scope" value="all" checked/>
+              <span class="text-sm" style="color:#4a3000;">Complete data — every record across all events</span>
+            </label>
+            <label class="radio-card">
+              <input type="radio" name="scope" value="event"/>
+              <span class="text-sm" style="color:#4a3000;">Specific event</span>
+            </label>
+            <label class="radio-card">
+              <input type="radio" name="scope" value="date_range"/>
+              <span class="text-sm" style="color:#4a3000;">Custom date range</span>
+            </label>
+            <label class="radio-card">
+              <input type="radio" name="scope" value="type"/>
+              <span class="text-sm" style="color:#4a3000;">Specific activity type only</span>
+            </label>
+            <label class="radio-card">
+              <input type="radio" name="scope" value="donor"/>
+              <span class="text-sm" style="color:#4a3000;">Specific donor / family</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- conditional-ish fields (always rendered, ignored server-side if not relevant to chosen scope) -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Event (if "Specific event")</label>
+            <select name="export_event_id">
+              <option value="">— Select Event —</option>
+              {% for ev in all_events %}
+                <option value="{{ ev.event_id }}">{{ ev.event_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Activity Type (if "Specific type")</label>
+            <select name="export_type">
+              <option value="">— Select Type —</option>
+              <option value="payment">Payments</option>
+              <option value="pledge">Pledges</option>
+              <option value="donor">Donors Added</option>
+              <option value="family">Families Added</option>
+              <option value="role">Roles Added</option>
+              <option value="event">Event Created/Edited</option>
+              <option value="user">User Actions</option>
+              <option value="goods">Goods / In-Kind</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">From Date</label>
+            <input type="date" name="export_from_date"/>
+          </div>
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">To Date</label>
+            <input type="date" name="export_to_date"/>
+          </div>
+          <div class="col-span-2">
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Donor (if "Specific donor")</label>
+            <select name="export_donor_id">
+              <option value="">— Select Donor —</option>
+              {% for donor in all_donors %}
+                <option value="{{ donor.donor_id }}">{{ donor.first_name }} {{ donor.last_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <!-- FORMAT -->
+        <div class="scope-block">
+          <p class="cinzel text-xs font-bold tracking-widest mb-3" style="color:#c2710c;">FORMAT</p>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="radio-card justify-center">
+              <input type="radio" name="format" value="pdf" checked/>
+              <span class="text-sm font-semibold" style="color:#4a3000;">📄 PDF</span>
+            </label>
+            <label class="radio-card justify-center">
+              <input type="radio" name="format" value="csv"/>
+              <span class="text-sm font-semibold" style="color:#4a3000;">📊 CSV</span>
+            </label>
+            <label class="radio-card justify-center">
+              <input type="radio" name="format" value="xlsx"/>
+              <span class="text-sm font-semibold" style="color:#4a3000;">📗 Excel</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- COLUMNS / INCLUDE OPTIONS -->
+        <div class="scope-block">
+          <p class="cinzel text-xs font-bold tracking-widest mb-3" style="color:#c2710c;">INCLUDE</p>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center gap-2 text-xs" style="color:#4a3000;">
+              <input type="checkbox" name="include_payments" value="1" checked class="accent-amber-600"/> Payments
+            </label>
+            <label class="flex items-center gap-2 text-xs" style="color:#4a3000;">
+              <input type="checkbox" name="include_pledges" value="1" checked class="accent-amber-600"/> Pledges
+            </label>
+            <label class="flex items-center gap-2 text-xs" style="color:#4a3000;">
+              <input type="checkbox" name="include_donors" value="1" checked class="accent-amber-600"/> Donors / Families
+            </label>
+            <label class="flex items-center gap-2 text-xs" style="color:#4a3000;">
+              <input type="checkbox" name="include_roles" value="1" checked class="accent-amber-600"/> Roles
+            </label>
+            <label class="flex items-center gap-2 text-xs" style="color:#4a3000;">
+              <input type="checkbox" name="include_audit_meta" value="1" checked class="accent-amber-600"/> "Performed By" &amp; timestamp columns
+            </label>
+            <label class="flex items-center gap-2 text-xs" style="color:#4a3000;">
+              <input type="checkbox" name="include_summary" value="1" checked class="accent-amber-600"/> Summary totals page
+            </label>
+          </div>
+        </div>
+
+        <p class="text-xs italic" style="color:#b08050;">
+          Only Admin and Manager roles can export reports. Every export is itself logged as a "Report Downloaded" activity.
+        </p>
+
+        <div class="flex gap-3 pt-1">
+          <button type="submit" class="btn-primary cinzel font-semibold tracking-widest flex-1">⬇ GENERATE &amp; DOWNLOAD</button>
+          <a href="#" class="btn-outline cinzel font-semibold flex-1 text-center" style="text-decoration:none;">CANCEL</a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>
