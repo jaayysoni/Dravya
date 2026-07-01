@@ -118,9 +118,73 @@
       padding: 32px; position: relative;
       box-shadow: 0 20px 60px rgba(0,0,0,0.2);
     }
+
+    /* ── Searchable donor picker ── */
+    .donor-picker { position: relative; }
+    .donor-picker.has-error .donor-search-input {
+      border-color: #dc2626;
+      box-shadow: 0 0 0 2px rgba(220,38,38,0.12);
+    }
+    .donor-picker-error-msg {
+      display: none; font-size: 0.72rem; color: #dc2626; margin-top: 4px;
+    }
+    .donor-picker.has-error .donor-picker-error-msg { display: block; }
+    .donor-dropdown {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: #fffbf5; border: 1px solid #f0d9b5; border-radius: 4px;
+      max-height: 230px; overflow-y: auto; z-index: 60;
+      box-shadow: 0 8px 24px rgba(194,113,12,0.18);
+    }
+    .donor-option {
+      display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      padding: 9px 12px; cursor: pointer; font-size: 0.85rem; color: #4a3000;
+      border-bottom: 1px solid #fef3e2;
+    }
+    .donor-option:last-child { border-bottom: none; }
+    .donor-option:hover { background: #fef3e2; }
+    .donor-option-name { font-weight: 600; color: #7a2e00; }
+    .donor-option-meta { font-size: 0.72rem; color: #a07040; white-space: nowrap; }
+    .donor-no-results { padding: 10px 12px; font-size: 0.82rem; color: #a07040; display: none; }
+    .donor-clear-btn {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      font-size: 0.75rem; color: #a07040; cursor: pointer; display: none;
+    }
+    .donor-picker.has-value .donor-clear-btn { display: block; }
   </style>
 </head>
 <body class="min-h-screen">
+
+  {# ══════════════════════════════════════════════
+     MACRO: searchable donor picker
+     Renders a text search box + hidden input (submits donor_id)
+     + dropdown list filterable by name / mobile / donor ID.
+  ══════════════════════════════════════════════ #}
+  {% macro donor_picker(field_name, donors, selected_id=None, selected_label=None, required=True, placeholder='Search by name, mobile, or donor ID...') %}
+    <div class="donor-picker{% if required %} donor-picker-required{% endif %}{% if selected_id %} has-value{% endif %}">
+      <input type="text"
+             class="donor-search-input"
+             placeholder="{{ placeholder }}"
+             autocomplete="off"
+             value="{{ selected_label or '' }}"/>
+      <span class="donor-clear-btn">✕ clear</span>
+      <input type="hidden" name="{{ field_name }}" class="donor-hidden-input" value="{{ selected_id or '' }}"/>
+      <div class="donor-dropdown">
+        {% for donor in donors %}
+          <div class="donor-option"
+               data-id="{{ donor.donor_id }}"
+               data-label="{{ donor.first_name or '' }} {{ donor.last_name or '' }}"
+               data-search="{{ ((donor.first_name or '') ~ ' ' ~ (donor.last_name or '') ~ ' ' ~ (donor.mobile or '') ~ ' ' ~ donor.donor_id) | lower }}">
+            <span class="donor-option-name">{{ donor.first_name }} {{ donor.last_name }}</span>
+            <span class="donor-option-meta">{{ donor.mobile or '—' }} · #{{ donor.donor_id }}</span>
+          </div>
+        {% endfor %}
+        <div class="donor-no-results">No matching donor found.</div>
+      </div>
+      {% if required %}
+        <p class="donor-picker-error-msg">Please select a donor from the list.</p>
+      {% endif %}
+    </div>
+  {% endmacro %}
 
   <div class="top-strip"></div>
 
@@ -381,7 +445,7 @@
                          class="text-xs py-1 px-2 rounded border border-green-200 text-green-700 hover:bg-green-50"
                          style="text-decoration:none;">💰 Pay</a>
                       {% if current_user.role == 'admin' %}
-                        <a href="/events/{{ event.event_id }}/pledges/{{ pledge.pledge_id }}/edit"
+                        <a href="#editPledgeModal-{{ pledge.pledge_id }}"
                            class="btn-outline text-xs py-1 px-2"
                            style="text-decoration:none;">Edit</a>
                       {% endif %}
@@ -438,7 +502,7 @@
                 <div class="flex items-center gap-2">
                   <span class="badge badge-role">Role</span>
                   {% if current_user.role == 'admin' %}
-                    <a href="/events/{{ event.event_id }}/roles/{{ role.role_id }}/edit"
+                    <a href="#editRoleModal-{{ role.role_id }}"
                        class="text-xs" style="color:#c2710c; text-decoration:none;">✎</a>
                   {% endif %}
                 </div>
@@ -657,15 +721,7 @@
         <input type="hidden" name="pledge_type_group" value="cash"/>
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Donor *</label>
-          <select name="donor_id" required>
-            <option value="">— Select Donor —</option>
-            {% for donor in donors %}
-              <option value="{{ donor.donor_id }}">
-                {{ donor.first_name }} {{ donor.last_name }}
-                {% if donor.mobile %} — {{ donor.mobile }}{% endif %}
-              </option>
-            {% endfor %}
-          </select>
+          {{ donor_picker('donor_id', donors) }}
           <p class="text-xs mt-1" style="color:#a07040;">
             Donor not listed?
             <a href="/donors#addDonorModal" style="color:#c2710c;">Add donor first</a>
@@ -687,7 +743,7 @@
         </div>
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Promised Amount (₹) *</label>
-          <input type="number" name="promised_amount" placeholder="0" min="0" step="100" required/>
+          <input type="number" name="promised_amount" placeholder="0" min="0" max="9999999999" step="100" required/>
         </div>
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Description</label>
@@ -721,15 +777,7 @@
         <input type="hidden" name="pledge_type" value="in_kind"/>
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Donor *</label>
-          <select name="donor_id" required>
-            <option value="">— Select Donor —</option>
-            {% for donor in donors %}
-              <option value="{{ donor.donor_id }}">
-                {{ donor.first_name }} {{ donor.last_name }}
-                {% if donor.mobile %} — {{ donor.mobile }}{% endif %}
-              </option>
-            {% endfor %}
-          </select>
+          {{ donor_picker('donor_id', donors) }}
         </div>
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Category</label>
@@ -759,7 +807,7 @@
           </div>
           <div>
             <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Market Value (₹)</label>
-            <input type="number" name="market_value" placeholder="0" min="0"/>
+            <input type="number" name="market_value" placeholder="0" min="0" max="9999999999"/>
           </div>
         </div>
         <div>
@@ -805,7 +853,7 @@
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Amount (₹) *</label>
-            <input type="number" name="amount" placeholder="0" min="1" step="1" required/>
+            <input type="number" name="amount" placeholder="0" min="1" max="9999999999" step="1" required/>
           </div>
           <div>
             <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Payment Mode *</label>
@@ -869,19 +917,11 @@
         </div>
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Assign To (Donor) *</label>
-          <select name="donor_id" required>
-            <option value="">— Select Donor —</option>
-            {% for donor in donors %}
-              <option value="{{ donor.donor_id }}">
-                {{ donor.first_name }} {{ donor.last_name }}
-                {% if donor.mobile %} — {{ donor.mobile }}{% endif %}
-              </option>
-            {% endfor %}
-          </select>
+          {{ donor_picker('donor_id', donors) }}
         </div>
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Target Amount (₹)</label>
-          <input type="number" name="target_amount" placeholder="0" min="0" step="100"/>
+          <input type="number" name="target_amount" placeholder="0" min="0" max="9999999999" step="100"/>
         </div>
         <div>
           <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Description</label>
@@ -897,6 +937,208 @@
       </form>
     </div>
   </div>
+
+
+  {# ══════════════════════════════════════════════
+     EDIT PLEDGE MODALS (one per pledge)
+  ══════════════════════════════════════════════ #}
+  {% for pledge in pledges %}
+    <div id="editPledgeModal-{{ pledge.pledge_id }}" class="modal-overlay">
+      <div class="modal-box mx-4">
+        <div class="flex items-center justify-between mb-1">
+          <h3 class="cinzel font-bold text-xl" style="color:#7a2e00;">Edit Pledge</h3>
+          <a href="#" class="text-amber-400 hover:text-amber-700 text-2xl leading-none"
+             style="text-decoration:none;">&times;</a>
+        </div>
+        <div class="divider mb-5">{{ pledge.donor_name }} — #{{ pledge.pledge_id }}</div>
+        <form method="POST" action="/events/{{ event.event_id }}/pledges/{{ pledge.pledge_id }}/edit" novalidate class="space-y-4">
+          {% if pledge.pledge_type == 'in_kind' %}
+            <input type="hidden" name="pledge_type" value="in_kind"/>
+            <div>
+              <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Item Name</label>
+              <input type="text" name="item_name" value="{{ pledge.item_name or '' }}"/>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Item Category</label>
+                <input type="text" name="item_category" value="{{ pledge.item_category or '' }}"/>
+              </div>
+              <div>
+                <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Unit</label>
+                <input type="text" name="unit" value="{{ pledge.unit or '' }}"/>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Quantity</label>
+                <input type="number" name="quantity" value="{{ pledge.quantity }}" min="0"/>
+              </div>
+              <div>
+                <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Market Value (₹)</label>
+                <input type="number" name="market_value" value="{{ pledge.market_value }}" min="0" max="9999999999"/>
+              </div>
+            </div>
+          {% else %}
+            <div>
+              <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Pledge Type</label>
+              <select name="pledge_type">
+                <option value="cash" {% if pledge.pledge_type == 'cash' %}selected{% endif %}>Cash</option>
+                <option value="labh" {% if pledge.pledge_type == 'labh' %}selected{% endif %}>Labh</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Promised Amount (₹)</label>
+              <input type="number" name="promised_amount" value="{{ pledge.promised_amount }}" min="0" max="9999999999" step="100"/>
+            </div>
+          {% endif %}
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Description</label>
+            <textarea name="description" rows="2" style="resize:none;">{{ pledge.description or '' }}</textarea>
+          </div>
+          <div class="flex gap-3 pt-2">
+            <button type="submit" class="btn-primary cinzel font-semibold tracking-widest flex-1">SAVE CHANGES</button>
+            <a href="#" class="btn-outline cinzel font-semibold flex-1 text-center" style="text-decoration:none;">CANCEL</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  {% endfor %}
+
+
+  {# ══════════════════════════════════════════════
+     EDIT ROLE MODALS (one per role)
+  ══════════════════════════════════════════════ #}
+  {% for role in roles %}
+    <div id="editRoleModal-{{ role.role_id }}" class="modal-overlay">
+      <div class="modal-box mx-4">
+        <div class="flex items-center justify-between mb-1">
+          <h3 class="cinzel font-bold text-xl" style="color:#7a2e00;">Edit Role</h3>
+          <a href="#" class="text-amber-400 hover:text-amber-700 text-2xl leading-none"
+             style="text-decoration:none;">&times;</a>
+        </div>
+        <div class="divider mb-5">ROLE DETAILS</div>
+        <form method="POST" action="/events/{{ event.event_id }}/roles/{{ role.role_id }}/edit" novalidate class="space-y-4">
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Role Name *</label>
+            <input type="text" name="role_name" value="{{ role.role_name }}" required/>
+          </div>
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Assign To (Donor)</label>
+            {{ donor_picker('donor_id', donors, selected_id=role.donor_id, selected_label=role.donor_name if role.donor_name != 'Unassigned' else '', required=False, placeholder='Search to reassign, or leave as-is...') }}
+          </div>
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Target Amount (₹)</label>
+            <input type="number" name="target_amount" value="{{ role.target_amount }}" min="0" max="9999999999" step="100"/>
+          </div>
+          <div>
+            <label class="text-xs font-semibold tracking-wide block mb-1" style="color:#7a4a00;">Description</label>
+            <textarea name="description" rows="2" style="resize:none;">{{ role.description or '' }}</textarea>
+          </div>
+          <div class="flex gap-3 pt-2">
+            <button type="submit" class="btn-primary cinzel font-semibold tracking-widest flex-1">SAVE CHANGES</button>
+            <a href="#" class="btn-outline cinzel font-semibold flex-1 text-center" style="text-decoration:none;">CANCEL</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  {% endfor %}
+
+
+  {# ══════════════════════════════════════════════
+     Donor picker behavior — vanilla JS, no framework.
+     Filters by name / mobile / donor ID, submits donor_id
+     via the hidden input, validates "required" pickers
+     on submit since browsers don't validate hidden inputs.
+  ══════════════════════════════════════════════ #}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.donor-picker').forEach(function (picker) {
+        var input     = picker.querySelector('.donor-search-input');
+        var hidden    = picker.querySelector('.donor-hidden-input');
+        var dropdown  = picker.querySelector('.donor-dropdown');
+        var clearBtn  = picker.querySelector('.donor-clear-btn');
+        var options   = Array.prototype.slice.call(dropdown.querySelectorAll('.donor-option'));
+        var noResults = dropdown.querySelector('.donor-no-results');
+
+        function openDropdown()  { dropdown.style.display = 'block'; }
+        function closeDropdown() { dropdown.style.display = 'none'; }
+
+        function filterOptions() {
+          var q = input.value.toLowerCase().trim();
+          var visibleCount = 0;
+          options.forEach(function (opt) {
+            var match = opt.getAttribute('data-search').indexOf(q) !== -1;
+            opt.style.display = match ? 'flex' : 'none';
+            if (match) visibleCount++;
+          });
+          if (noResults) noResults.style.display = (visibleCount === 0) ? 'block' : 'none';
+        }
+
+        input.addEventListener('focus', function () {
+          filterOptions();
+          openDropdown();
+        });
+
+        input.addEventListener('input', function () {
+          hidden.value = '';
+          picker.classList.remove('has-error', 'has-value');
+          filterOptions();
+          openDropdown();
+        });
+
+        options.forEach(function (opt) {
+          // mousedown (not click) fires before the input's blur, so the
+          // selection registers before the dropdown would otherwise close.
+          opt.addEventListener('mousedown', function (e) {
+            e.preventDefault();
+            hidden.value = opt.getAttribute('data-id');
+            input.value  = opt.getAttribute('data-label').trim();
+            picker.classList.remove('has-error');
+            picker.classList.add('has-value');
+            closeDropdown();
+          });
+        });
+
+        if (clearBtn) {
+          clearBtn.addEventListener('mousedown', function (e) {
+            e.preventDefault();
+            hidden.value = '';
+            input.value = '';
+            picker.classList.remove('has-value');
+            input.focus();
+            filterOptions();
+            openDropdown();
+          });
+        }
+
+        document.addEventListener('click', function (e) {
+          if (!picker.contains(e.target)) closeDropdown();
+        });
+      });
+
+      // Validate required donor pickers on submit — browsers skip
+      // constraint validation on hidden inputs, so this has to be manual.
+      document.querySelectorAll('form').forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+          var requiredPickers = form.querySelectorAll('.donor-picker-required');
+          var firstInvalid = null;
+          requiredPickers.forEach(function (picker) {
+            var hidden = picker.querySelector('.donor-hidden-input');
+            if (!hidden.value) {
+              picker.classList.add('has-error');
+              if (!firstInvalid) firstInvalid = picker;
+            } else {
+              picker.classList.remove('has-error');
+            }
+          });
+          if (firstInvalid) {
+            e.preventDefault();
+            firstInvalid.querySelector('.donor-search-input').focus();
+          }
+        });
+      });
+    });
+  </script>
 
 </body>
 </html>
